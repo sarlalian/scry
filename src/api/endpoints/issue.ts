@@ -14,6 +14,7 @@ import type { AtlassianDocument } from "../types/common.ts";
 
 export interface SearchOptions {
   maxResults?: number;
+  /** @deprecated Use nextPageToken for pagination with /rest/api/3/search/jql */
   startAt?: number;
   fields?: string[];
   expand?: string[];
@@ -72,13 +73,19 @@ export class IssueEndpoint {
   constructor(private client: JiraClient) {}
 
   async search(jql: string, options?: SearchOptions): Promise<SearchResult> {
-    return this.client.post<SearchResult>("/rest/api/3/search/jql", {
+    const body: Record<string, unknown> = {
       jql,
       maxResults: options?.maxResults ?? 50,
-      startAt: options?.startAt ?? 0,
       fields: options?.fields ?? DEFAULT_FIELDS,
-      nextPageToken: options?.nextPageToken,
-    });
+    };
+
+    // The /rest/api/3/search/jql endpoint uses nextPageToken for pagination
+    // instead of the deprecated startAt parameter
+    if (options?.nextPageToken) {
+      body.nextPageToken = options.nextPageToken;
+    }
+
+    return this.client.post<SearchResult>("/rest/api/3/search/jql", body);
   }
 
   async get(issueIdOrKey: string, options?: GetIssueOptions): Promise<Issue> {

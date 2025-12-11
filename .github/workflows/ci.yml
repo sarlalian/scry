@@ -55,6 +55,10 @@ jobs:
       - name: Run tests
         run: bun test
 
+      - name: Run tests with coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest'
+        run: bun test --coverage
+
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

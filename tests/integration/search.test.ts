@@ -112,23 +112,20 @@ describe("Search Integration Tests", () => {
     expect(result.issues[0]?.key).toBe(issueKey);
   });
 
-  test("search with pagination", async () => {
+  test("search with pagination using nextPageToken", async () => {
     const firstPage = await issueEndpoint.search("project = TEST", {
       maxResults: 1,
-      startAt: 0,
     });
 
     expect(firstPage.maxResults).toBe(1);
-    expect(firstPage.startAt).toBe(0);
     expect(firstPage.issues.length).toBeLessThanOrEqual(1);
 
-    if (firstPage.total! > 1) {
+    if (firstPage.total! > 1 && firstPage.nextPageToken) {
       const secondPage = await issueEndpoint.search("project = TEST", {
         maxResults: 1,
-        startAt: 1,
+        nextPageToken: firstPage.nextPageToken,
       });
 
-      expect(secondPage.startAt).toBe(1);
       expect(secondPage.issues.length).toBeLessThanOrEqual(1);
 
       if (firstPage.issues[0] && secondPage.issues[0]) {
@@ -140,11 +137,9 @@ describe("Search Integration Tests", () => {
   test("search returns correct metadata", async () => {
     const result = await issueEndpoint.search("project = TEST", {
       maxResults: 10,
-      startAt: 0,
     });
 
     expect(result.maxResults).toBeDefined();
-    expect(result.startAt).toBeDefined();
     expect(result.total).toBeDefined();
     expect(result.isLast).toBeDefined();
     expect(typeof result.isLast).toBe("boolean");
@@ -264,7 +259,7 @@ describe("Search Integration Tests", () => {
     }
   });
 
-  test("pagination with startAt and maxResults", async () => {
+  test("pagination with nextPageToken and maxResults", async () => {
     const fullResult = await issueEndpoint.search("project = TEST", {
       maxResults: 100,
     });
@@ -272,23 +267,26 @@ describe("Search Integration Tests", () => {
 
     if (totalIssues > 1) {
       const pageSize = 1;
-      const pages = Math.ceil(totalIssues / pageSize);
+      const maxPages = Math.min(Math.ceil(totalIssues / pageSize), 3);
 
       const seenKeys = new Set<string>();
+      let nextPageToken: string | undefined = undefined;
 
-      for (let page = 0; page < Math.min(pages, 3); page++) {
+      for (let page = 0; page < maxPages; page++) {
         const pageResult = await issueEndpoint.search("project = TEST", {
           maxResults: pageSize,
-          startAt: page * pageSize,
+          nextPageToken,
         });
 
-        expect(pageResult.startAt).toBe(page * pageSize);
         expect(pageResult.maxResults).toBe(pageSize);
 
         pageResult.issues.forEach((issue) => {
           expect(seenKeys.has(issue.key)).toBe(false);
           seenKeys.add(issue.key);
         });
+
+        nextPageToken = pageResult.nextPageToken;
+        if (!nextPageToken) break;
       }
     }
   });
@@ -330,11 +328,9 @@ describe("Search Integration Tests", () => {
   test("search with zero maxResults still returns metadata", async () => {
     const result = await issueEndpoint.search("project = TEST", {
       maxResults: 0,
-      startAt: 0,
     });
 
     expect(result.maxResults).toBe(0);
-    expect(result.startAt).toBe(0);
     expect(result.total).toBeGreaterThanOrEqual(0);
     expect(result.issues.length).toBe(0);
   });

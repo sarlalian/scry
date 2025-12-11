@@ -185,11 +185,21 @@ export class MockJiraServer {
     const body = (await request.json()) as {
       jql: string;
       maxResults?: number;
-      startAt?: number;
+      nextPageToken?: string;
     };
     const jql = body.jql;
     const maxResults = body.maxResults ?? 50;
-    const startAt = body.startAt ?? 0;
+
+    // Decode nextPageToken to get the offset (token is base64 encoded offset)
+    let startAt = 0;
+    if (body.nextPageToken) {
+      try {
+        startAt = parseInt(atob(body.nextPageToken), 10);
+        if (isNaN(startAt)) startAt = 0;
+      } catch {
+        startAt = 0;
+      }
+    }
 
     let filteredIssues = Object.values(MOCK_ISSUES);
 
@@ -216,13 +226,19 @@ export class MockJiraServer {
     }
 
     const paginatedIssues = filteredIssues.slice(startAt, startAt + maxResults);
+    const isLast = startAt + maxResults >= filteredIssues.length;
+
+    // Generate nextPageToken if there are more results
+    const nextOffset = startAt + maxResults;
+    const nextPageToken = isLast ? undefined : btoa(nextOffset.toString());
 
     return Response.json({
       issues: paginatedIssues,
       maxResults,
-      startAt,
+      startAt: 0,
       total: filteredIssues.length,
-      isLast: startAt + maxResults >= filteredIssues.length,
+      isLast,
+      nextPageToken,
     });
   }
 

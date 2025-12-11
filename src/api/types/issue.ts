@@ -130,7 +130,8 @@ export interface Transition {
 export interface SearchResult {
   issues: Issue[];
   maxResults: number;
-  startAt: number;
+  /** @deprecated The /rest/api/3/search/jql endpoint uses nextPageToken for pagination */
+  startAt?: number;
   total?: number;
   isLast?: boolean;
   nextPageToken?: string;
