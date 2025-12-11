@@ -1,17 +1,7 @@
 import { describe, expect, test, mock } from "bun:test";
 import { IssueEndpoint } from "../../../../src/api/endpoints/issue.ts";
 import type { JiraClient } from "../../../../src/api/client.ts";
-import type {
-  Issue,
-  SearchResult,
-  CreateIssueRequest,
-  CreatedIssue,
-  Transition,
-  Comment,
-  Worklog,
-  IssueLinkType,
-  IssueLink,
-} from "../../../../src/api/types/issue.ts";
+import type { Issue, CreatedIssue, Comment, Worklog } from "../../../../src/api/types/issue.ts";
 
 describe("IssueEndpoint", () => {
   describe("assign", () => {
@@ -46,12 +36,10 @@ describe("IssueEndpoint", () => {
     test("adds a simple text comment", async () => {
       const mockComment: Comment = {
         id: "comment123",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/comment/comment123",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         body: {
           type: "doc",
@@ -81,12 +69,10 @@ describe("IssueEndpoint", () => {
     test("adds a multi-line comment", async () => {
       const mockComment: Comment = {
         id: "comment456",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/comment/comment456",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         body: {
           type: "doc",
@@ -111,7 +97,7 @@ describe("IssueEndpoint", () => {
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
-      const result = await endpoint.addComment("SCRY-123", "Line 1\nLine 2");
+      await endpoint.addComment("SCRY-123", "Line 1\nLine 2");
 
       expect(mockClient.post).toHaveBeenCalled();
       const callArgs = (mockClient.post as any).mock.calls[0];
@@ -121,12 +107,10 @@ describe("IssueEndpoint", () => {
     test("adds a comment with visibility restrictions", async () => {
       const mockComment: Comment = {
         id: "comment789",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/comment/comment789",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         body: {
           type: "doc",
@@ -159,12 +143,10 @@ describe("IssueEndpoint", () => {
     test("handles empty comment", async () => {
       const mockComment: Comment = {
         id: "comment999",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/comment/comment999",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         body: {
           type: "doc",
@@ -197,17 +179,13 @@ describe("IssueEndpoint", () => {
     test("adds a worklog with time spent", async () => {
       const mockWorklog: Worklog = {
         id: "worklog123",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/worklog/worklog123",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         timeSpent: "2h",
         timeSpentSeconds: 7200,
-        created: "2025-01-01T00:00:00.000Z",
-        updated: "2025-01-01T00:00:00.000Z",
         started: "2025-01-01T00:00:00.000Z",
       };
 
@@ -227,17 +205,13 @@ describe("IssueEndpoint", () => {
     test("adds a worklog with comment", async () => {
       const mockWorklog: Worklog = {
         id: "worklog456",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/worklog/worklog456",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         timeSpent: "1h 30m",
         timeSpentSeconds: 5400,
-        created: "2025-01-01T00:00:00.000Z",
-        updated: "2025-01-01T00:00:00.000Z",
         started: "2025-01-01T00:00:00.000Z",
       };
 
@@ -257,17 +231,13 @@ describe("IssueEndpoint", () => {
     test("adds a worklog with started time", async () => {
       const mockWorklog: Worklog = {
         id: "worklog789",
-        self: "https://example.atlassian.net/rest/api/3/issue/SCRY-123/worklog/worklog789",
         author: {
           accountId: "user123",
           displayName: "Test User",
           active: true,
-          self: "https://example.atlassian.net/rest/api/3/user?accountId=user123",
         },
         timeSpent: "4h",
         timeSpentSeconds: 14400,
-        created: "2025-01-01T00:00:00.000Z",
-        updated: "2025-01-01T00:00:00.000Z",
         started: "2025-01-01T09:00:00.000Z",
       };
 
@@ -367,9 +337,12 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          issuetype: { id: "1", name: "Task", subtask: false },
+          project: { id: "1", key: "SCRY", name: "Scry Project" },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
           issuelinks: [
             {
               id: "link1",
@@ -394,7 +367,6 @@ describe("IssueEndpoint", () => {
                       key: "indeterminate",
                       name: "In Progress",
                       colorName: "yellow",
-                      self: "https://example.atlassian.net/rest/api/3/statuscategory/4",
                     },
                   },
                 },
@@ -433,9 +405,12 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          issuetype: { id: "1", name: "Task", subtask: false },
+          project: { id: "1", key: "SCRY", name: "Scry Project" },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -468,7 +443,7 @@ describe("IssueEndpoint", () => {
               },
             ],
           },
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           labels: ["label1", "label2"],
           components: [{ id: "comp1", name: "Component 1" }],
@@ -481,9 +456,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -513,7 +489,7 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/123",
         fields: {
           summary: "Original Issue",
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           status: {
             name: "To Do",
@@ -523,9 +499,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -555,7 +532,7 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/123",
         fields: {
           summary: "Original Issue",
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           status: {
             name: "To Do",
@@ -565,9 +542,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -607,7 +585,7 @@ describe("IssueEndpoint", () => {
               },
             ],
           },
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           status: {
             name: "To Do",
@@ -617,9 +595,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -649,7 +628,7 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/123",
         fields: {
           summary: "Original Issue",
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           components: [{ id: "comp1", name: "Component 1" }],
           status: {
@@ -660,9 +639,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -692,7 +672,7 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/123",
         fields: {
           summary: "Original Issue",
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           labels: ["existing"],
           status: {
@@ -703,9 +683,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 
@@ -735,7 +716,7 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/123",
         fields: {
           summary: "Original Issue",
-          issuetype: { id: "1", name: "Task" },
+          issuetype: { id: "1", name: "Task", subtask: false },
           project: { id: "1", key: "SCRY", name: "Scry Project" },
           priority: { id: "3", name: "Medium" },
           status: {
@@ -746,9 +727,10 @@ describe("IssueEndpoint", () => {
               key: "new",
               name: "To Do",
               colorName: "blue-gray",
-              self: "https://example.atlassian.net/rest/api/3/statuscategory/2",
             },
           },
+          created: "2025-01-01T00:00:00.000Z",
+          updated: "2025-01-01T00:00:00.000Z",
         },
       };
 

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { runScry, scryJson } from "../helpers/cli-runner.ts";
+import { runScry } from "../helpers/cli-runner.ts";
 import { describeWithCredentials, getCredentials } from "../helpers/skip-helpers.ts";
 import { parseJsonOutput, isValidXml, isValidJson } from "../helpers/output-parser.ts";
 

@@ -1,4 +1,3 @@
-import { $ } from "bun";
 import { resolve } from "path";
 
 export interface CliResult {

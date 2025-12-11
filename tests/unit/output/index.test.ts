@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, mock, spyOn } from "bun:test";
+import { describe, expect, test, beforeEach, spyOn } from "bun:test";
 import {
   OutputManager,
   getOutputManager,
@@ -125,7 +125,7 @@ describe("OutputManager", () => {
 
     manager.print(data, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.data.test).toBe("value");
 
@@ -165,7 +165,7 @@ describe("output", () => {
 
     output(data, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.data.test).toBe("value");
 
@@ -178,7 +178,7 @@ describe("output", () => {
 
     output(data, "json", { meta: { total: 10 } });
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.meta.total).toBe(10);
 
@@ -191,7 +191,7 @@ describe("output", () => {
 
     output(data, "csv", { columns: ["key", "priority"] });
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const lines = logged.split("\n");
     expect(lines[0]).toBe("key,priority");
 
@@ -204,7 +204,7 @@ describe("output", () => {
 
     output(data, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed).toHaveProperty("data");
     expect(parsed.data.test).toBe("value");
@@ -220,7 +220,7 @@ describe("outputError", () => {
 
     outputError(error, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.error.message).toBe("Test error");
     expect(parsed.error.code).toBe("Error");
@@ -233,7 +233,7 @@ describe("outputError", () => {
 
     outputError("Test error", "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.error.message).toBe("Test error");
     expect(parsed.error.code).toBe("ERROR");
@@ -248,7 +248,7 @@ describe("outputError", () => {
 
     outputError(error, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.error.code).toBe("CustomError");
 
@@ -262,7 +262,7 @@ describe("outputError", () => {
     outputError(error);
 
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.mock.calls[0][0]).toContain("Error: Test error");
+    expect(consoleSpy.mock.calls[0]![0]).toContain("Error: Test error");
 
     consoleSpy.mockRestore();
   });
@@ -273,7 +273,7 @@ describe("outputError", () => {
 
     outputError(error, "json");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     const parsed = JSON.parse(logged);
     expect(parsed.data).toBe(null);
     expect(parsed).toHaveProperty("error");
@@ -287,7 +287,7 @@ describe("outputError", () => {
 
     outputError(error, "xml");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     expect(logged).toContain("<error>");
     expect(logged).toContain("<message>Test error</message>");
 
@@ -300,7 +300,7 @@ describe("outputError", () => {
 
     outputError(error, "plain");
 
-    const logged = consoleSpy.mock.calls[0][0];
+    const logged = consoleSpy.mock.calls[0]![0];
     expect(logged).toBe("Error: Test error");
 
     consoleSpy.mockRestore();
