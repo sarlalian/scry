@@ -1,0 +1,9 @@
+dist/
+node_modules/
+*.lock
+bun.lock
+coverage/
+.env
+.env.*
+*.log
+tests/fixtures/

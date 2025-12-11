@@ -1,0 +1,76 @@
+{
+  "name": "scry",
+  "version": "0.1.0",
+  "description": "Feature-rich interactive Jira command line",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "scry": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun run build:all",
+    "build:local": "bun build --compile --outfile dist/scry src/index.ts",
+    "build:linux-x64": "bun build --compile --target=bun-linux-x64 --outfile dist/scry-linux-x64 src/index.ts",
+    "build:linux-arm64": "bun build --compile --target=bun-linux-arm64 --outfile dist/scry-linux-arm64 src/index.ts",
+    "build:darwin-x64": "bun build --compile --target=bun-darwin-x64 --outfile dist/scry-darwin-x64 src/index.ts",
+    "build:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 --outfile dist/scry-darwin-arm64 src/index.ts",
+    "build:windows-x64": "bun build --compile --target=bun-windows-x64 --outfile dist/scry-windows-x64 src/index.ts",
+    "build:all": "bun run clean && bun run build:linux-x64 && bun run build:linux-arm64 && bun run build:darwin-x64 && bun run build:darwin-arm64 && bun run build:windows-x64",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write src tests",
+    "format:check": "prettier --check src tests",
+    "check": "bun run typecheck && bun run lint && bun run format:check",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.2.0",
+    "@types/react": "^19.2.7",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "fast-xml-parser": "^4.5.0",
+    "ink": "^6.5.1",
+    "marked": "^15.0.4",
+    "marked-terminal": "^7.2.1",
+    "open": "^10.1.0",
+    "ora": "^8.1.1",
+    "react": "^19.2.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^10.1.8",
+    "ink-testing-library": "^4.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.49.0"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sarlalian/scry.git"
+  },
+  "keywords": [
+    "jira",
+    "cli",
+    "command-line",
+    "atlassian",
+    "agile",
+    "typescript",
+    "bun"
+  ],
+  "author": "sarlalian",
+  "license": "MIT"
+}
