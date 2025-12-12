@@ -63,7 +63,10 @@ export async function runScry(args: string[], options: CliOptions = {}): Promise
   }
 }
 
-export async function scryJson<T>(args: string[], options?: CliOptions): Promise<{ data: T; meta?: Record<string, unknown> }> {
+export async function scryJson<T>(
+  args: string[],
+  options?: CliOptions
+): Promise<{ data: T; meta?: Record<string, unknown> }> {
   const result = await runScry([...args, "-o", "json"], options);
   if (result.exitCode !== 0) {
     let errorMessage = result.stderr || result.stdout;
@@ -80,7 +83,10 @@ export async function scryJson<T>(args: string[], options?: CliOptions): Promise
   return JSON.parse(result.stdout);
 }
 
-export async function scryJsonRaw<T>(args: string[], options?: CliOptions): Promise<CliResult & { parsed?: T }> {
+export async function scryJsonRaw<T>(
+  args: string[],
+  options?: CliOptions
+): Promise<CliResult & { parsed?: T }> {
   const result = await runScry([...args, "-o", "json"], options);
   let parsed: T | undefined;
   try {

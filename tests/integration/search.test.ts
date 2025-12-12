@@ -57,8 +57,7 @@ describe("Search Integration Tests", () => {
 
     await issueEndpoint.transition(
       issue1.key,
-      (await issueEndpoint.getTransitions(issue1.key)).find((t) => t.name === "Start Progress")!
-        .id
+      (await issueEndpoint.getTransitions(issue1.key)).find((t) => t.name === "Start Progress")!.id
     );
   });
 
@@ -178,9 +177,7 @@ describe("Search Integration Tests", () => {
   });
 
   test("search with complex JQL query", async () => {
-    const result = await issueEndpoint.search(
-      'project = TEST AND status = "In Progress"'
-    );
+    const result = await issueEndpoint.search('project = TEST AND status = "In Progress"');
 
     if (result.issues.length > 0) {
       result.issues.forEach((issue) => {

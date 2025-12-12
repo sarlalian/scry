@@ -118,9 +118,7 @@ describe("Epic Workflow Integration Tests", () => {
     });
 
     const searchResult = await issueEndpoint.search(`project = TEST`);
-    const epicIssues = searchResult.issues.filter(
-      (issue) => issue.fields.parent?.key === epic.key
-    );
+    const epicIssues = searchResult.issues.filter((issue) => issue.fields.parent?.key === epic.key);
 
     expect(epicIssues.length).toBeGreaterThanOrEqual(2);
     expect(epicIssues.some((i) => i.key === issue1.key)).toBe(true);

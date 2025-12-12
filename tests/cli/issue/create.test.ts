@@ -48,10 +48,7 @@ describeWithCredentials("issue create CLI", () => {
     test.skip("enters interactive mode without all required flags", async () => {
       // This test is skipped because it would hang waiting for input
       // The expected behavior is that the command should prompt for missing fields
-      const result = await runScry(
-        ["issue", "create", "-p", creds.project],
-        { timeout: 1000 }
-      );
+      const result = await runScry(["issue", "create", "-p", creds.project], { timeout: 1000 });
 
       // Command will timeout or fail because it's waiting for input
       expect(result.exitCode).not.toBe(0);

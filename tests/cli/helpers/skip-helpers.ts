@@ -11,10 +11,9 @@ export interface JiraCredentials {
 }
 
 function loadConfigFile(): { server?: string; login?: string; project?: string } {
-  const configPath =
-    process.env["XDG_CONFIG_HOME"]
-      ? join(process.env["XDG_CONFIG_HOME"], "scry", "config.yml")
-      : join(homedir(), ".config", "scry", "config.yml");
+  const configPath = process.env["XDG_CONFIG_HOME"]
+    ? join(process.env["XDG_CONFIG_HOME"], "scry", "config.yml")
+    : join(homedir(), ".config", "scry", "config.yml");
 
   if (!existsSync(configPath)) {
     return {};

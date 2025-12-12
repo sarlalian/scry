@@ -36,25 +36,13 @@ describeWithCredentials("issue view CLI", () => {
 
   describe("non-existent issue", () => {
     test("returns error for non-existent issue", async () => {
-      const result = await runScry([
-        "issue",
-        "view",
-        `${creds.project}-999999`,
-        "-o",
-        "json",
-      ]);
+      const result = await runScry(["issue", "view", `${creds.project}-999999`, "-o", "json"]);
 
       expect(result.exitCode).not.toBe(0);
     });
 
     test("returns structured error in JSON format", async () => {
-      const result = await runScry([
-        "issue",
-        "view",
-        `${creds.project}-999999`,
-        "-o",
-        "json",
-      ]);
+      const result = await runScry(["issue", "view", `${creds.project}-999999`, "-o", "json"]);
 
       expect(result.exitCode).not.toBe(0);
 

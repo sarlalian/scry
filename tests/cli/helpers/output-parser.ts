@@ -22,7 +22,7 @@ export function extractIssueKey(stdout: string): string | null {
 
   // Try to find issue key in table format (first column)
   const tableMatch = stdout.match(/│\s*([A-Z]+-\d+)\s*│/);
-  return tableMatch ? tableMatch[1] ?? null : null;
+  return tableMatch ? (tableMatch[1] ?? null) : null;
 }
 
 export function extractErrorMessage(output: string): string | null {
@@ -38,7 +38,7 @@ export function extractErrorMessage(output: string): string | null {
 
   // Try to find error message in plain text
   const errorMatch = output.match(/Error:\s*(.+)/i);
-  return errorMatch ? errorMatch[1]?.trim() ?? null : null;
+  return errorMatch ? (errorMatch[1]?.trim() ?? null) : null;
 }
 
 export function tableRowCount(stdout: string): number {
@@ -46,10 +46,7 @@ export function tableRowCount(stdout: string): number {
   const lines = stdout.split("\n").filter((line) => {
     const trimmed = line.trim();
     return (
-      trimmed &&
-      trimmed.startsWith("│") &&
-      !trimmed.includes("────") &&
-      !trimmed.includes("Key") // Exclude header row
+      trimmed && trimmed.startsWith("│") && !trimmed.includes("────") && !trimmed.includes("Key") // Exclude header row
     );
   });
   return lines.length;
@@ -60,7 +57,10 @@ export function hasTableHeader(stdout: string, header: string): boolean {
 }
 
 export function isValidXml(stdout: string): boolean {
-  return stdout.trim().startsWith("<?xml") && (stdout.includes("<data>") || stdout.includes("<response>"));
+  return (
+    stdout.trim().startsWith("<?xml") &&
+    (stdout.includes("<data>") || stdout.includes("<response>"))
+  );
 }
 
 export function isValidJson(stdout: string): boolean {

@@ -205,14 +205,7 @@ describeWithCredentials("output format validation", () => {
         "table",
       ]);
 
-      const defaultResult = await runScry([
-        "issue",
-        "list",
-        "-p",
-        creds.project,
-        "--limit",
-        "1",
-      ]);
+      const defaultResult = await runScry(["issue", "list", "-p", creds.project, "--limit", "1"]);
 
       expect(tableResult.exitCode).toBe(0);
       expect(defaultResult.exitCode).toBe(0);
