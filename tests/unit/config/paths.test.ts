@@ -99,7 +99,7 @@ describe("config paths", () => {
     test("returns absolute path", () => {
       const dir = getDefaultConfigDir();
 
-      expect(dir.startsWith("/") || dir.match(/^[A-Z]:\\/)).toBe(true);
+      expect(dir.startsWith("/") || /^[A-Z]:\\/.test(dir)).toBe(true);
     });
 
     test("includes CONFIG_DIR_NAME in path", () => {
@@ -120,7 +120,7 @@ describe("config paths", () => {
     test("returns absolute path", () => {
       const path = getDefaultConfigPath();
 
-      expect(path.startsWith("/") || path.match(/^[A-Z]:\\/)).toBe(true);
+      expect(path.startsWith("/") || /^[A-Z]:\\/.test(path)).toBe(true);
     });
 
     test("includes CONFIG_FILE_NAME in path", () => {
