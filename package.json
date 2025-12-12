@@ -26,7 +26,10 @@
     "format": "prettier --write src tests",
     "format:check": "prettier --check src tests",
     "check": "bun run typecheck && bun run lint && bun run format:check",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "version:patch": "bun scripts/version-bump.ts patch",
+    "version:minor": "bun scripts/version-bump.ts minor",
+    "version:major": "bun scripts/version-bump.ts major"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.2.0",
