@@ -4,6 +4,8 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
+import { success, error } from "../../../utils/messages.ts";
+import { requireValidIssueKey, requireValidIssueKeys } from "../../../utils/validation.ts";
 
 interface AddResult {
   epicKey: string;
@@ -22,16 +24,15 @@ function formatAddResult(result: AddResult, format: OutputFormat): string {
     let message = "";
 
     if (successCount > 0) {
-      const statusIcon = chalk.green("✓");
       if (successCount === 1 && result.results.length === 1) {
-        message += `${statusIcon} Issue ${result.results[0]?.issueKey} has been added to epic ${result.epicKey}\n`;
+        message += success(`Issue ${result.results[0]?.issueKey} has been added to epic ${result.epicKey}`) + "\n";
       } else {
-        message += `${statusIcon} ${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been added to epic ${result.epicKey}\n`;
+        message += success(`${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been added to epic ${result.epicKey}`) + "\n";
       }
     }
 
     if (failureCount > 0) {
-      message += chalk.red(`\n✗ ${failureCount} issue${failureCount > 1 ? "s" : ""} failed:\n`);
+      message += "\n" + error(`${failureCount} issue${failureCount > 1 ? "s" : ""} failed:`) + "\n";
       for (const res of result.results) {
         if (!res.success) {
           message += chalk.dim(`  ${res.issueKey}: ${res.error}\n`);
@@ -54,6 +55,9 @@ export const addCommand = new Command("add")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
+      requireValidIssueKey(epicKey);
+      requireValidIssueKeys(issueKeys);
+
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
       const client = new JiraClient(config);
@@ -96,10 +100,10 @@ export const addCommand = new Command("add")
 
       const hasFailures = results.some((r) => !r.success);
       if (hasFailures) {
-        process.exit(1);
+        throw new Error("Failed to add one or more issues to epic");
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

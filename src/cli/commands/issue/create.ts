@@ -6,57 +6,13 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateIssueRequest, CreatedIssue } from "../../../api/types/issue.ts";
-import type { AtlassianDocument } from "../../../api/types/common.ts";
-
-function textToAdf(text: string): AtlassianDocument {
-  const paragraphs = text.split("\n").filter((line) => line.trim());
-
-  if (paragraphs.length === 0) {
-    return {
-      type: "doc",
-      version: 1,
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "" }],
-        },
-      ],
-    };
-  }
-
-  return {
-    type: "doc",
-    version: 1,
-    content: paragraphs.map((para) => ({
-      type: "paragraph",
-      content: [{ type: "text", text: para }],
-    })),
-  };
-}
-
-function parseLabels(labelString?: string): string[] | undefined {
-  if (!labelString) return undefined;
-  const labels = labelString
-    .split(",")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  return labels.length > 0 ? labels : undefined;
-}
-
-function parseComponents(componentString?: string): Array<{ name: string }> | undefined {
-  if (!componentString) return undefined;
-  const components = componentString
-    .split(",")
-    .map((c) => c.trim())
-    .filter(Boolean)
-    .map((name) => ({ name }));
-  return components.length > 0 ? components : undefined;
-}
+import { textToAdf, parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
+import { success } from "../../../utils/messages.ts";
 
 function formatCreatedIssue(issue: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Issue created successfully!\n") +
+      success("Issue created successfully!") + "\n" +
       chalk.cyan(`Key: ${issue.key}\n`) +
       chalk.dim(`ID: ${issue.id}\n`) +
       chalk.dim(`URL: ${issue.self}`)
@@ -273,6 +229,6 @@ export const createCommand = new Command("create")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

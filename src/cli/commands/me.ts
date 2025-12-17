@@ -37,6 +37,6 @@ export const meCommand = new Command("me")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

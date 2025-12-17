@@ -11,6 +11,7 @@ import type {
   InlineNode,
   TextNode,
 } from "../../../api/types/common.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
   if (!doc || !doc.content) return "";
@@ -133,6 +134,8 @@ export const viewCommand = new Command("view")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
+      requireValidIssueKey(issueKey);
+
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
       const client = new JiraClient(config);
@@ -186,6 +189,6 @@ export const viewCommand = new Command("view")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

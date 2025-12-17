@@ -5,16 +5,14 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { IssueLink } from "../../../api/types/issue.ts";
+import { success, error } from "../../../utils/messages.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface UnlinkResult {
   success: boolean;
   sourceKey: string;
   targetKey: string;
   message: string;
-}
-
-function isValidIssueKey(key: string): boolean {
-  return /^[A-Z]+-\d+$/.test(key);
 }
 
 function findLinks(targetKey: string, issueLinks: IssueLink[]): IssueLink[] {
@@ -34,8 +32,12 @@ function formatLinkDisplay(link: IssueLink, sourceKey: string): string {
 
 function formatUnlinkResult(result: UnlinkResult, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
-    const statusIcon = result.success ? chalk.green("✓") : chalk.red("✗");
-    let message = `${statusIcon} ${result.message}\n`;
+    let message = "";
+    if (result.success) {
+      message = success(result.message) + "\n";
+    } else {
+      message = error(result.message) + "\n";
+    }
     message += chalk.dim(`Source: ${result.sourceKey}\n`);
     message += chalk.dim(`Target: ${result.targetKey}`);
     return message;
@@ -53,13 +55,8 @@ export const unlinkCommand = new Command("unlink")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
-      if (!isValidIssueKey(sourceKey)) {
-        throw new Error(`Invalid source issue key: ${sourceKey}`);
-      }
-
-      if (!isValidIssueKey(targetKey)) {
-        throw new Error(`Invalid target issue key: ${targetKey}`);
-      }
+      requireValidIssueKey(sourceKey);
+      requireValidIssueKey(targetKey);
 
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
@@ -112,6 +109,6 @@ export const unlinkCommand = new Command("unlink")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

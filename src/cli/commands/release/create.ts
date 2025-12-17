@@ -7,6 +7,7 @@ import { VersionEndpoint } from "../../../api/endpoints/version.ts";
 import { ProjectEndpoint } from "../../../api/endpoints/project.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateVersionRequest, Version } from "../../../api/types/version.ts";
+import { success } from "../../../utils/messages.ts";
 
 function parseDate(dateStr?: string): string | undefined {
   if (!dateStr || !dateStr.trim()) return undefined;
@@ -20,7 +21,7 @@ function parseDate(dateStr?: string): string | undefined {
 function formatCreatedVersion(version: Version, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Release created successfully!\n") +
+      success("Release created successfully!") + "\n" +
       chalk.cyan(`ID: ${version.id}\n`) +
       chalk.cyan(`Name: ${version.name}\n`) +
       (version.description ? chalk.dim(`Description: ${version.description}\n`) : "") +
@@ -215,6 +216,6 @@ export const createCommand = new Command("create")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

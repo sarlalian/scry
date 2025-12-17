@@ -6,6 +6,8 @@ import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { UserEndpoint } from "../../../api/endpoints/user.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { User } from "../../../api/types/user.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { success, error } from "../../../utils/messages.ts";
 
 interface AssignResult {
   success: boolean;
@@ -82,8 +84,12 @@ async function resolveAssignee(
 
 function formatAssignResult(result: AssignResult, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
-    const statusIcon = result.success ? chalk.green("✓") : chalk.red("✗");
-    let message = `${statusIcon} ${result.message}\n`;
+    let message = "";
+    if (result.success) {
+      message = success(result.message) + "\n";
+    } else {
+      message = error(result.message) + "\n";
+    }
     message += chalk.dim(`Issue: ${result.issueKey}\n`);
 
     if (result.assignee.displayName) {
@@ -112,6 +118,8 @@ export const assignCommand = new Command("assign")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
+      requireValidIssueKey(issueKey);
+
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
       const client = new JiraClient(config);
@@ -139,6 +147,6 @@ export const assignCommand = new Command("assign")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

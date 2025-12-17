@@ -11,6 +11,7 @@ import type {
   IssueLink,
 } from "../types/issue.ts";
 import type { AtlassianDocument } from "../types/common.ts";
+import { textToAdf } from "../../utils/adf-helpers.ts";
 
 export interface SearchOptions {
   maxResults?: number;
@@ -145,35 +146,7 @@ export class IssueEndpoint {
     body: string | AtlassianDocument,
     options?: CommentOptions
   ): Promise<Comment> {
-    let adfBody: AtlassianDocument;
-
-    if (typeof body === "string") {
-      const paragraphs = body.split("\n").filter((line) => line.trim());
-
-      if (paragraphs.length === 0) {
-        adfBody = {
-          type: "doc",
-          version: 1,
-          content: [
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: "" }],
-            },
-          ],
-        };
-      } else {
-        adfBody = {
-          type: "doc",
-          version: 1,
-          content: paragraphs.map((para) => ({
-            type: "paragraph",
-            content: [{ type: "text", text: para }],
-          })),
-        };
-      }
-    } else {
-      adfBody = body;
-    }
+    const adfBody = typeof body === "string" ? textToAdf(body) : body;
 
     return this.client.post<Comment>(`/rest/api/3/issue/${issueIdOrKey}/comment`, {
       body: adfBody,

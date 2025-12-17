@@ -6,11 +6,13 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { Comment } from "../../../api/types/issue.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { success } from "../../../utils/messages.ts";
 
 function formatComment(comment: Comment, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Comment added successfully!\n") +
+      success("Comment added successfully!") + "\n" +
       chalk.cyan(`ID: ${comment.id}\n`) +
       chalk.dim(`Author: ${comment.author.displayName}\n`) +
       chalk.dim(`Created: ${comment.created}`)
@@ -34,6 +36,8 @@ export const commentCommand = new Command("comment")
         const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
         try {
+          requireValidIssueKey(issueKey);
+
           const configManager = getConfigManager();
           const config = configManager.load(globalOpts["config"] as string | undefined);
           const client = new JiraClient(config);
@@ -95,7 +99,7 @@ export const commentCommand = new Command("comment")
           }
         } catch (err) {
           outputError(err instanceof Error ? err : String(err), format);
-          process.exit(1);
+          throw err;
         }
       })
   );

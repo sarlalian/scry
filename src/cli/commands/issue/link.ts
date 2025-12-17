@@ -5,6 +5,8 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { IssueLinkType } from "../../../api/types/issue.ts";
+import { success, error } from "../../../utils/messages.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface LinkResult {
   success: boolean;
@@ -12,10 +14,6 @@ interface LinkResult {
   targetKey: string;
   linkType: string;
   message: string;
-}
-
-function isValidIssueKey(key: string): boolean {
-  return /^[A-Z]+-\d+$/.test(key);
 }
 
 function findLinkType(search: string, types: IssueLinkType[]): IssueLinkType | undefined {
@@ -39,8 +37,12 @@ function formatLinkTypes(types: IssueLinkType[]): string {
 
 function formatLinkResult(result: LinkResult, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
-    const statusIcon = result.success ? chalk.green("✓") : chalk.red("✗");
-    let message = `${statusIcon} ${result.message}\n`;
+    let message = "";
+    if (result.success) {
+      message = success(result.message) + "\n";
+    } else {
+      message = error(result.message) + "\n";
+    }
     message += chalk.dim(`Source: ${result.sourceKey}\n`);
     message += chalk.dim(`Target: ${result.targetKey}\n`);
     message += chalk.dim(`Type: ${result.linkType}`);
@@ -61,13 +63,8 @@ export const linkCommand = new Command("link")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
-      if (!isValidIssueKey(sourceKey)) {
-        throw new Error(`Invalid source issue key: ${sourceKey}`);
-      }
-
-      if (!isValidIssueKey(targetKey)) {
-        throw new Error(`Invalid target issue key: ${targetKey}`);
-      }
+      requireValidIssueKey(sourceKey);
+      requireValidIssueKey(targetKey);
 
       if (sourceKey === targetKey) {
         throw new Error("Cannot link an issue to itself");
@@ -120,6 +117,6 @@ export const linkCommand = new Command("link")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

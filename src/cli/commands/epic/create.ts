@@ -6,47 +6,13 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateIssueRequest, CreatedIssue } from "../../../api/types/issue.ts";
-import type { AtlassianDocument } from "../../../api/types/common.ts";
-
-function textToAdf(text: string): AtlassianDocument {
-  const paragraphs = text.split("\n").filter((line) => line.trim());
-
-  if (paragraphs.length === 0) {
-    return {
-      type: "doc",
-      version: 1,
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "" }],
-        },
-      ],
-    };
-  }
-
-  return {
-    type: "doc",
-    version: 1,
-    content: paragraphs.map((para) => ({
-      type: "paragraph",
-      content: [{ type: "text", text: para }],
-    })),
-  };
-}
-
-function parseLabels(labelString?: string): string[] | undefined {
-  if (!labelString) return undefined;
-  const labels = labelString
-    .split(",")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  return labels.length > 0 ? labels : undefined;
-}
+import { textToAdf, parseLabels } from "../../../utils/adf-helpers.ts";
+import { success } from "../../../utils/messages.ts";
 
 function formatCreatedEpic(epic: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Epic created successfully!\n") +
+      success("Epic created successfully!") + "\n" +
       chalk.cyan(`Key: ${epic.key}\n`) +
       chalk.dim(`ID: ${epic.id}\n`) +
       chalk.dim(`URL: ${epic.self}`)
@@ -213,6 +179,6 @@ export const createCommand = new Command("create")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

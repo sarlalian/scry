@@ -9,6 +9,7 @@ import {
 } from "../../config/index.ts";
 import { JiraClient } from "../../api/client.ts";
 import { UserEndpoint } from "../../api/endpoints/user.ts";
+import { success, warning } from "../../utils/messages.ts";
 
 export const initCommand = new Command("init")
   .description("Initialize scry configuration")
@@ -25,7 +26,7 @@ export const initCommand = new Command("init")
           default: false,
         });
         if (!overwrite) {
-          console.log(chalk.yellow("Configuration unchanged."));
+          console.log(warning("Configuration unchanged."));
           return;
         }
       }
@@ -97,7 +98,7 @@ export const initCommand = new Command("init")
     if (testConnection) {
       const token = process.env["SCRY_API_TOKEN"];
       if (!token) {
-        console.log(chalk.yellow("\nSCRY_API_TOKEN not set. Skipping connection test."));
+        console.log("\n" + warning("SCRY_API_TOKEN not set. Skipping connection test."));
         console.log(chalk.dim("Set it with: export SCRY_API_TOKEN=your-token\n"));
       } else {
         console.log(chalk.dim("\nTesting connection..."));
@@ -116,7 +117,7 @@ export const initCommand = new Command("init")
           const userEndpoint = new UserEndpoint(client);
           const user = await userEndpoint.getMyself();
           console.log(
-            chalk.green(`\nConnected successfully as ${user.displayName} (${user.emailAddress})\n`)
+            "\n" + success(`Connected successfully as ${user.displayName} (${user.emailAddress})`) + "\n"
           );
         } catch (err) {
           console.log(
@@ -128,6 +129,6 @@ export const initCommand = new Command("init")
     }
 
     configManager.save(config, configPath);
-    console.log(chalk.green(`Configuration saved to ${configPath}`));
+    console.log(success(`Configuration saved to ${configPath}`));
     console.log(chalk.dim("\nYou can now use scry! Try: scry me"));
   });

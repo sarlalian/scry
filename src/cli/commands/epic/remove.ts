@@ -4,6 +4,8 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
+import { success, error } from "../../../utils/messages.ts";
+import { requireValidIssueKey, requireValidIssueKeys } from "../../../utils/validation.ts";
 
 interface RemoveResult {
   epicKey: string;
@@ -22,16 +24,15 @@ function formatRemoveResult(result: RemoveResult, format: OutputFormat): string 
     let message = "";
 
     if (successCount > 0) {
-      const statusIcon = chalk.green("✓");
       if (successCount === 1 && result.results.length === 1) {
-        message += `${statusIcon} Issue ${result.results[0]?.issueKey} has been removed from epic ${result.epicKey}\n`;
+        message += success(`Issue ${result.results[0]?.issueKey} has been removed from epic ${result.epicKey}`) + "\n";
       } else {
-        message += `${statusIcon} ${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been removed from epic ${result.epicKey}\n`;
+        message += success(`${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been removed from epic ${result.epicKey}`) + "\n";
       }
     }
 
     if (failureCount > 0) {
-      message += chalk.red(`\n✗ ${failureCount} issue${failureCount > 1 ? "s" : ""} failed:\n`);
+      message += "\n" + error(`${failureCount} issue${failureCount > 1 ? "s" : ""} failed:`) + "\n";
       for (const res of result.results) {
         if (!res.success) {
           message += chalk.dim(`  ${res.issueKey}: ${res.error}\n`);
@@ -55,6 +56,9 @@ export const removeCommand = new Command("remove")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
+      requireValidIssueKey(epicKey);
+      requireValidIssueKeys(issueKeys);
+
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
       const client = new JiraClient(config);
@@ -97,10 +101,10 @@ export const removeCommand = new Command("remove")
 
       const hasFailures = results.some((r) => !r.success);
       if (hasFailures) {
-        process.exit(1);
+        throw new Error("Failed to remove one or more issues from epic");
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

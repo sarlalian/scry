@@ -12,6 +12,8 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { Transition } from "../../../api/types/issue.ts";
+import { success, error, warning } from "../../../utils/messages.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface TransitionTableRow {
   id: string;
@@ -57,6 +59,8 @@ export const moveCommand = new Command("move")
     const interactive = opts?.["interactive"] as boolean | undefined;
 
     try {
+      requireValidIssueKey(issueKey);
+
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
       const client = new JiraClient(config);
@@ -66,11 +70,11 @@ export const moveCommand = new Command("move")
 
       if (transitions.length === 0) {
         if (format === "table" || format === "plain") {
-          console.log(chalk.yellow(`No transitions available for ${issueKey}`));
+          console.log(warning(`No transitions available for ${issueKey}`));
         } else {
           outputError("No transitions available", format);
         }
-        process.exit(1);
+        throw new Error("No transitions available");
       }
 
       if (!targetStatus && !interactive) {
@@ -104,8 +108,8 @@ export const moveCommand = new Command("move")
       if (interactive || !targetStatus) {
         const availableTransitions = transitions.filter((t) => t.isAvailable);
         if (availableTransitions.length === 0) {
-          console.log(chalk.yellow("No available transitions for this issue"));
-          process.exit(1);
+          console.log(warning("No available transitions for this issue"));
+          throw new Error("No available transitions for this issue");
         }
 
         const answer = await select({
@@ -123,7 +127,7 @@ export const moveCommand = new Command("move")
 
         if (!selectedTransition) {
           if (format === "table" || format === "plain") {
-            console.log(chalk.red(`No transition found for status: ${targetStatus}`));
+            console.log(error(`No transition found for status: ${targetStatus}`));
             console.log("");
             console.log(chalk.dim("Available transitions:"));
 
@@ -140,7 +144,7 @@ export const moveCommand = new Command("move")
           } else {
             outputError(`No transition found for status: ${targetStatus}`, format);
           }
-          process.exit(1);
+          throw new Error(`No transition found for status: ${targetStatus}`);
         }
 
         if (!selectedTransition.isAvailable) {
@@ -154,21 +158,21 @@ export const moveCommand = new Command("move")
               format
             );
           }
-          process.exit(1);
+          throw new Error(`Transition "${selectedTransition.name}" is not available for ${issueKey}`);
         }
       }
 
       if (!selectedTransition) {
         outputError("No transition selected", format);
-        process.exit(1);
+        throw new Error("No transition selected");
       }
 
       await issueEndpoint.transition(issueKey, selectedTransition.id);
 
       if (format === "table" || format === "plain") {
         console.log(
-          chalk.green(
-            `✓ Successfully moved ${issueKey} to ${chalk.bold(selectedTransition.to.name)}`
+          success(
+            `Successfully moved ${issueKey} to ${chalk.bold(selectedTransition.to.name)}`
           )
         );
       } else {
@@ -184,6 +188,6 @@ export const moveCommand = new Command("move")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

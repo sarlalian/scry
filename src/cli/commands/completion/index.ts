@@ -13,7 +13,7 @@ export const completionCommand = new Command("completion")
         chalk.red(`Error: Unsupported shell '${shell}'. Supported shells: bash, zsh, fish`)
       );
       console.error(chalk.dim("\nUsage: scry completion <bash|zsh|fish>"));
-      process.exit(1);
+      throw new Error(`Unsupported shell '${shell}'. Supported shells: bash, zsh, fish`);
     }
 
     try {
@@ -25,6 +25,6 @@ export const completionCommand = new Command("completion")
           `Error generating completion: ${err instanceof Error ? err.message : String(err)}`
         )
       );
-      process.exit(1);
+      throw err;
     }
   });

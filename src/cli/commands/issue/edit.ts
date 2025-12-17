@@ -7,51 +7,9 @@ import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateIssueRequest, Issue } from "../../../api/types/issue.ts";
 import type { AtlassianDocument, InlineNode } from "../../../api/types/common.ts";
-
-function textToAdf(text: string): AtlassianDocument {
-  const paragraphs = text.split("\n").filter((line) => line.trim());
-
-  if (paragraphs.length === 0) {
-    return {
-      type: "doc",
-      version: 1,
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "" }],
-        },
-      ],
-    };
-  }
-
-  return {
-    type: "doc",
-    version: 1,
-    content: paragraphs.map((para) => ({
-      type: "paragraph",
-      content: [{ type: "text", text: para }],
-    })),
-  };
-}
-
-function parseLabels(labelString?: string): string[] | undefined {
-  if (!labelString) return undefined;
-  const labels = labelString
-    .split(",")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  return labels.length > 0 ? labels : undefined;
-}
-
-function parseComponents(componentString?: string): Array<{ name: string }> | undefined {
-  if (!componentString) return undefined;
-  const components = componentString
-    .split(",")
-    .map((c) => c.trim())
-    .filter(Boolean)
-    .map((name) => ({ name }));
-  return components.length > 0 ? components : undefined;
-}
+import { textToAdf, parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { success } from "../../../utils/messages.ts";
 
 function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
   if (!doc || !doc.content) return "";
@@ -84,7 +42,7 @@ function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
 function formatUpdatedIssue(issue: Issue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Issue updated successfully!\n") +
+      success("Issue updated successfully!") + "\n" +
       chalk.cyan(`Key: ${issue.key}\n`) +
       chalk.dim(`Summary: ${issue.fields.summary}\n`) +
       chalk.dim(`Status: ${issue.fields.status.name}`)
@@ -110,9 +68,7 @@ export const editCommand = new Command("edit")
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
     try {
-      if (!issueKey || !issueKey.trim()) {
-        throw new Error("Issue key is required");
-      }
+      requireValidIssueKey(issueKey);
 
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
@@ -334,6 +290,6 @@ export const editCommand = new Command("edit")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

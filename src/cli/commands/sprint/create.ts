@@ -6,6 +6,7 @@ import { JiraClient } from "../../../api/client.ts";
 import { SprintEndpoint } from "../../../api/endpoints/sprint.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateSprintRequest, Sprint } from "../../../api/types/sprint.ts";
+import { success } from "../../../utils/messages.ts";
 
 function parseDate(dateStr?: string): string | undefined {
   if (!dateStr || !dateStr.trim()) return undefined;
@@ -19,7 +20,7 @@ function parseDate(dateStr?: string): string | undefined {
 function formatCreatedSprint(sprint: Sprint, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      chalk.green.bold("Sprint created successfully!\n") +
+      success("Sprint created successfully!") + "\n" +
       chalk.cyan(`ID: ${sprint.id}\n`) +
       chalk.cyan(`Name: ${sprint.name}\n`) +
       chalk.cyan(`State: ${sprint.state.toUpperCase()}\n`) +
@@ -189,6 +190,6 @@ export const createCommand = new Command("create")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

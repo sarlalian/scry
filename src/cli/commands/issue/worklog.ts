@@ -6,6 +6,8 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { Worklog } from "../../../api/types/issue.ts";
+import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { success } from "../../../utils/messages.ts";
 
 function validateTimeFormat(time: string): boolean {
   const timePattern = /^(\d+w)?(\d+d)?(\d+h)?(\d+m)?$/;
@@ -15,7 +17,7 @@ function validateTimeFormat(time: string): boolean {
 function formatWorklog(worklog: Worklog, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     let result =
-      chalk.green.bold("Worklog added successfully!\n") +
+      success("Worklog added successfully!") + "\n" +
       chalk.cyan(`ID: ${worklog.id}\n`) +
       chalk.dim(`Time Spent: ${worklog.timeSpent}\n`) +
       chalk.dim(`Author: ${worklog.author.displayName}\n`) +
@@ -58,6 +60,8 @@ export const worklogCommand = new Command("worklog")
         const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
         try {
+          requireValidIssueKey(issueKey);
+
           const configManager = getConfigManager();
           const config = configManager.load(globalOpts["config"] as string | undefined);
           const client = new JiraClient(config);
@@ -123,7 +127,7 @@ export const worklogCommand = new Command("worklog")
           }
         } catch (err) {
           outputError(err instanceof Error ? err : String(err), format);
-          process.exit(1);
+          throw err;
         }
       })
   );

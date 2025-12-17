@@ -10,6 +10,8 @@ import {
   buildSprintUrl,
 } from "../../utils/url-builder.ts";
 import { outputError, type OutputFormat } from "../../output/index.ts";
+import { success } from "../../utils/messages.ts";
+import { requireValidIssueKey } from "../../utils/validation.ts";
 
 interface OpenOptions {
   board?: string;
@@ -52,6 +54,7 @@ export const openCommand = new Command("open")
 
         switch (resourceType) {
           case "issue":
+            requireValidIssueKey(normalizedResource);
             url = buildIssueUrl(config.server, normalizedResource);
             console.log(chalk.dim(`Opening issue ${normalizedResource}...`));
             break;
@@ -67,9 +70,9 @@ export const openCommand = new Command("open")
       }
 
       await openInBrowser(url);
-      console.log(chalk.green(`Opened: ${url}`));
+      console.log(success(`Opened: ${url}`));
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

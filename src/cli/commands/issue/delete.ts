@@ -5,6 +5,8 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
+import { success, error, warning } from "../../../utils/messages.ts";
+import { parseIssueKeys, requireValidIssueKeys } from "../../../utils/validation.ts";
 
 interface DeleteResult {
   success: boolean;
@@ -18,25 +20,6 @@ interface DeleteSummary {
   succeeded: number;
   failed: number;
   results: DeleteResult[];
-}
-
-function parseIssueKeys(input: string): string[] {
-  return input
-    .split(/[\s,]+/)
-    .map((key) => key.trim())
-    .filter(Boolean);
-}
-
-function isValidIssueKey(key: string): boolean {
-  return /^[A-Z]+-\d+$/.test(key);
-}
-
-function validateIssueKeys(keys: string[]): { valid: boolean; invalidKeys: string[] } {
-  const invalidKeys = keys.filter((key) => !isValidIssueKey(key));
-  return {
-    valid: invalidKeys.length === 0,
-    invalidKeys,
-  };
 }
 
 function createDeleteResult(issueKey: string, success: boolean, error?: string): DeleteResult {
@@ -58,8 +41,11 @@ function formatDeleteSummary(summary: DeleteSummary, format: OutputFormat): stri
       const result = summary.results[0];
       if (!result) return "";
 
-      const statusIcon = result.success ? chalk.green("✓") : chalk.red("✗");
-      message += `${statusIcon} ${result.message}\n`;
+      if (result.success) {
+        message += success(result.message) + "\n";
+      } else {
+        message += error(result.message) + "\n";
+      }
       message += chalk.dim(`Issue: ${result.issueKey}`);
 
       if (result.error) {
@@ -73,8 +59,11 @@ function formatDeleteSummary(summary: DeleteSummary, format: OutputFormat): stri
 
       message += chalk.bold("Results:\n");
       for (const result of summary.results) {
-        const statusIcon = result.success ? chalk.green("✓") : chalk.red("✗");
-        message += `  ${statusIcon} ${result.issueKey}`;
+        if (result.success) {
+          message += `  ${success(result.issueKey)}`;
+        } else {
+          message += `  ${error(result.issueKey)}`;
+        }
 
         if (result.error) {
           message += ` - ${chalk.red(result.error)}`;
@@ -113,17 +102,11 @@ export const deleteCommand = new Command("delete")
         throw new Error("No valid issue keys provided");
       }
 
-      const validation = validateIssueKeys(issueKeys);
-      if (!validation.valid) {
-        throw new Error(
-          `Invalid issue key format: ${validation.invalidKeys.join(", ")}. ` +
-            `Issue keys must be in the format: PROJECT-123`
-        );
-      }
+      requireValidIssueKeys(issueKeys);
 
       if (!force) {
         if (format === "table" || format === "plain") {
-          console.log(chalk.yellow.bold("\nWarning: This action cannot be undone!\n"));
+          console.log("\n" + warning("This action cannot be undone!") + "\n");
 
           if (issueKeys.length === 1) {
             console.log(chalk.dim(`You are about to delete issue: ${chalk.bold(issueKeys[0])}`));
@@ -189,10 +172,10 @@ export const deleteCommand = new Command("delete")
       }
 
       if (summary.failed > 0) {
-        process.exit(1);
+        throw new Error(`Failed to delete ${summary.failed} issue(s)`);
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

@@ -170,6 +170,6 @@ export const listCommand = new Command("list")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

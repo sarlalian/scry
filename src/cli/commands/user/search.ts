@@ -35,6 +35,7 @@ function truncate(str: string, len: number): string {
 }
 
 export const searchCommand = new Command("search")
+  .alias("find")
   .description("Search for Jira users")
   .argument("<query>", "Search query string")
   .option("--limit <n>", "Maximum number of results", "50")
@@ -103,6 +104,6 @@ export const searchCommand = new Command("search")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });

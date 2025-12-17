@@ -4,13 +4,15 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { SprintEndpoint } from "../../../api/endpoints/sprint.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
+import { success } from "../../../utils/messages.ts";
+import { requireValidIssueKeys } from "../../../utils/validation.ts";
 
 function formatSuccessMessage(sprintId: number, issueKeys: string[]): string {
   const issueCount = issueKeys.length;
   const issueText = issueCount === 1 ? "issue" : "issues";
   const issueList = issueKeys.join(", ");
   return (
-    chalk.green.bold(`Successfully added ${issueCount} ${issueText} to sprint ${sprintId}\n`) +
+    success(`Successfully added ${issueCount} ${issueText} to sprint ${sprintId}`) + "\n" +
     chalk.dim(`Issues: ${issueList}`)
   );
 }
@@ -33,6 +35,8 @@ export const addCommand = new Command("add")
       if (issueKeys.length === 0) {
         throw new Error("At least one issue key is required");
       }
+
+      requireValidIssueKeys(issueKeys);
 
       const configManager = getConfigManager();
       const config = configManager.load(globalOpts["config"] as string | undefined);
@@ -60,6 +64,6 @@ export const addCommand = new Command("add")
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);
-      process.exit(1);
+      throw err;
     }
   });
