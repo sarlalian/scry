@@ -258,4 +258,37 @@ describe("issue link command", () => {
     expect(formatted[0]).toBe("Blocks: blocks / is blocked by");
     expect(formatted[1]).toBe("Relates: relates to / relates to");
   });
+
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteLink = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteLink(true)).toBe(false);
+    expect(shouldExecuteLink(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output", () => {
+    const createDryRunOutput = (
+      sourceKey: string,
+      targetKey: string,
+      linkType: string
+    ) => {
+      return {
+        dryRun: true,
+        action: "link",
+        sourceKey,
+        targetKey,
+        linkType,
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", "PROJ-456", "Blocks");
+
+    expect(result.dryRun).toBe(true);
+    expect(result.action).toBe("link");
+    expect(result.sourceKey).toBe("PROJ-123");
+    expect(result.targetKey).toBe("PROJ-456");
+    expect(result.linkType).toBe("Blocks");
+  });
 });

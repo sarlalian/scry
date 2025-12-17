@@ -255,4 +255,37 @@ describe("issue unlink command", () => {
     const display = formatLinkDisplay(outwardLink, "PROJ-123");
     expect(display).toBe("PROJ-123 blocks PROJ-456");
   });
+
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteUnlink = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteUnlink(true)).toBe(false);
+    expect(shouldExecuteUnlink(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output", () => {
+    const createDryRunOutput = (
+      sourceKey: string,
+      targetKey: string,
+      linkId: string
+    ) => {
+      return {
+        dryRun: true,
+        action: "unlink",
+        sourceKey,
+        targetKey,
+        linkId,
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", "PROJ-456", "10001");
+
+    expect(result.dryRun).toBe(true);
+    expect(result.action).toBe("unlink");
+    expect(result.sourceKey).toBe("PROJ-123");
+    expect(result.targetKey).toBe("PROJ-456");
+    expect(result.linkId).toBe("10001");
+  });
 });

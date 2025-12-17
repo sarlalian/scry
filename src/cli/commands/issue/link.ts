@@ -5,7 +5,7 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { IssueLinkType } from "../../../api/types/issue.ts";
-import { success, error } from "../../../utils/messages.ts";
+import { success, error, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface LinkResult {
@@ -56,11 +56,13 @@ export const linkCommand = new Command("link")
   .argument("<source-key>", "Source issue key (e.g., PROJ-123)")
   .argument("<target-key>", "Target issue key (e.g., PROJ-456)")
   .option("-t, --type <link-type>", "Link type (e.g., Blocks, Relates, Duplicates)")
+  .option("--dry-run", "Preview what would be linked without making changes")
   .action(async function (this: Command, sourceKey: string, targetKey: string) {
-    const opts = this.opts<{ type?: string }>();
+    const opts = this.opts<{ type?: string; dryRun?: boolean }>();
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
+    const isDryRun = opts.dryRun;
 
     try {
       requireValidIssueKey(sourceKey);
@@ -98,6 +100,31 @@ export const linkCommand = new Command("link")
         throw new Error(
           `Unknown link type: "${opts.type}". Use the command without --type to see available link types.`
         );
+      }
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          console.log(
+            dryRun(
+              `Would link ${chalk.bold(sourceKey)} to ${chalk.bold(targetKey)} with type ${chalk.bold(linkType.name)}`
+            )
+          );
+          console.log(chalk.dim(`  Relationship: ${sourceKey} ${linkType.outward} ${targetKey}`));
+          console.log("");
+        } else {
+          output(
+            {
+              dryRun: true,
+              action: "link",
+              sourceKey,
+              targetKey,
+              linkType: linkType.name,
+            },
+            format
+          );
+        }
+        return;
       }
 
       await issueEndpoint.link(sourceKey, targetKey, linkType.name);

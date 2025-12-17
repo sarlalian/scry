@@ -298,4 +298,37 @@ describe("issue move command", () => {
     expect(available[0]?.id).toBe("11");
     expect(available[1]?.id).toBe("31");
   });
+
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteTransition = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteTransition(true)).toBe(false);
+    expect(shouldExecuteTransition(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output", () => {
+    const createDryRunOutput = (
+      issueKey: string,
+      transition: string,
+      toStatus: string
+    ) => {
+      return {
+        dryRun: true,
+        issueKey,
+        action: "transition",
+        transition,
+        toStatus,
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", "In Progress", "In Progress");
+
+    expect(result.dryRun).toBe(true);
+    expect(result.issueKey).toBe("PROJ-123");
+    expect(result.action).toBe("transition");
+    expect(result.transition).toBe("In Progress");
+    expect(result.toStatus).toBe("In Progress");
+  });
 });

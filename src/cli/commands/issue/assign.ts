@@ -7,7 +7,7 @@ import { UserEndpoint } from "../../../api/endpoints/user.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { User } from "../../../api/types/user.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
-import { success, error } from "../../../utils/messages.ts";
+import { success, error, dryRun } from "../../../utils/messages.ts";
 
 interface AssignResult {
   success: boolean;
@@ -112,10 +112,13 @@ export const assignCommand = new Command("assign")
     "<assignee>",
     "Assignee (account ID, email, display name, 'me', or '-'/'none'/'unassigned' to unassign)"
   )
+  .option("--dry-run", "Preview what would be assigned without making changes")
   .action(async function (this: Command, issueKey: string, assignee: string) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
+    const opts = this.opts();
+    const isDryRun = opts["dryRun"] as boolean | undefined;
 
     try {
       requireValidIssueKey(issueKey);
@@ -127,6 +130,33 @@ export const assignCommand = new Command("assign")
       const userEndpoint = new UserEndpoint(client);
 
       const resolved = await resolveAssignee(assignee, userEndpoint);
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          if (resolved.accountId === null) {
+            console.log(dryRun(`Would unassign issue ${chalk.bold(issueKey)}`));
+          } else {
+            console.log(
+              dryRun(
+                `Would assign issue ${chalk.bold(issueKey)} to ${chalk.bold(resolved.displayName ?? resolved.accountId)}`
+              )
+            );
+          }
+          console.log("");
+        } else {
+          output(
+            {
+              dryRun: true,
+              issueKey,
+              action: "assign",
+              assignee: resolved,
+            },
+            format
+          );
+        }
+        return;
+      }
 
       await issueEndpoint.assign(issueKey, resolved.accountId);
 

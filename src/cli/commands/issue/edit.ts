@@ -9,7 +9,7 @@ import type { CreateIssueRequest, Issue } from "../../../api/types/issue.ts";
 import type { AtlassianDocument, InlineNode } from "../../../api/types/common.ts";
 import { textToAdf, parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
-import { success } from "../../../utils/messages.ts";
+import { success, dryRun } from "../../../utils/messages.ts";
 
 function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
   if (!doc || !doc.content) return "";
@@ -62,10 +62,12 @@ export const editCommand = new Command("edit")
   .option("-l, --labels <labels>", "Update labels (comma-separated)")
   .option("-C, --components <components>", "Update components (comma-separated)")
   .option("-i, --interactive", "Interactive mode with prompts showing current values")
+  .option("--dry-run", "Preview what would be updated without making changes")
   .action(async function (this: Command, issueKey: string, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
+    const isDryRun = opts["dryRun"] as boolean | undefined;
 
     try {
       requireValidIssueKey(issueKey);
@@ -269,6 +271,37 @@ export const editCommand = new Command("edit")
 
       if (Object.keys(fields).length === 0) {
         throw new Error("No fields to update. Provide at least one field to update.");
+      }
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          console.log(dryRun(`Would update issue ${chalk.bold(issueKey)} with the following fields:`));
+          console.log("");
+
+          if (fields.summary) {
+            console.log(chalk.dim(`  Summary: ${fields.summary}`));
+          }
+          if (fields.description) {
+            console.log(chalk.dim(`  Description: ${adfToPlainText(fields.description)}`));
+          }
+          if (fields.assignee) {
+            console.log(chalk.dim(`  Assignee: ${fields.assignee.accountId || "Unassigned"}`));
+          }
+          if (fields.priority) {
+            console.log(chalk.dim(`  Priority: ${fields.priority.name}`));
+          }
+          if (fields.labels) {
+            console.log(chalk.dim(`  Labels: ${fields.labels.join(", ")}`));
+          }
+          if (fields.components) {
+            console.log(chalk.dim(`  Components: ${fields.components.map((c) => c.name).join(", ")}`));
+          }
+          console.log("");
+        } else {
+          output({ dryRun: true, issueKey, action: "update", fields }, format);
+        }
+        return;
       }
 
       if (globalOpts["debug"]) {

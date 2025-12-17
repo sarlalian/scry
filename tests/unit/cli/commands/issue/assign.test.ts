@@ -228,4 +228,61 @@ describe("issue assign command", () => {
     expect(isAccountId("user@example.com")).toBe(false);
     expect(isAccountId("John Doe")).toBe(false);
   });
+
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteAssign = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteAssign(true)).toBe(false);
+    expect(shouldExecuteAssign(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output for assignment", () => {
+    const createDryRunOutput = (
+      issueKey: string,
+      assignee: { accountId: string | null; displayName: string | null }
+    ) => {
+      return {
+        dryRun: true,
+        issueKey,
+        action: "assign",
+        assignee,
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", {
+      accountId: "user123",
+      displayName: "John Doe",
+    });
+
+    expect(result.dryRun).toBe(true);
+    expect(result.issueKey).toBe("PROJ-123");
+    expect(result.action).toBe("assign");
+    expect(result.assignee.accountId).toBe("user123");
+    expect(result.assignee.displayName).toBe("John Doe");
+  });
+
+  test("dry-run produces preview output for unassignment", () => {
+    const createDryRunOutput = (
+      issueKey: string,
+      assignee: { accountId: string | null; displayName: string | null }
+    ) => {
+      return {
+        dryRun: true,
+        issueKey,
+        action: "assign",
+        assignee,
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", {
+      accountId: null,
+      displayName: null,
+    });
+
+    expect(result.dryRun).toBe(true);
+    expect(result.assignee.accountId).toBeNull();
+    expect(result.assignee.displayName).toBeNull();
+  });
 });

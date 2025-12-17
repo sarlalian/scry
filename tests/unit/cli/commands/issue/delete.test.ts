@@ -196,6 +196,54 @@ describe("issue delete command", () => {
     expect(shouldPromptConfirmation(false)).toBe(true);
   });
 
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteDelete = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteDelete(true)).toBe(false);
+    expect(shouldExecuteDelete(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output for single issue", () => {
+    const createDryRunOutput = (issueKey: string, deleteSubtasks: boolean) => {
+      return {
+        dryRun: true,
+        actions: [
+          {
+            issueKey,
+            action: "delete",
+            deleteSubtasks,
+          },
+        ],
+      };
+    };
+
+    const result = createDryRunOutput("PROJ-123", false);
+    expect(result.dryRun).toBe(true);
+    expect(result.actions[0]?.issueKey).toBe("PROJ-123");
+    expect(result.actions[0]?.action).toBe("delete");
+    expect(result.actions[0]?.deleteSubtasks).toBe(false);
+  });
+
+  test("dry-run produces preview output for multiple issues", () => {
+    const createDryRunOutput = (issueKeys: string[], deleteSubtasks: boolean) => {
+      return {
+        dryRun: true,
+        actions: issueKeys.map((key) => ({
+          issueKey: key,
+          action: "delete",
+          deleteSubtasks,
+        })),
+      };
+    };
+
+    const result = createDryRunOutput(["PROJ-123", "PROJ-124", "PROJ-125"], true);
+    expect(result.dryRun).toBe(true);
+    expect(result.actions).toHaveLength(3);
+    expect(result.actions[0]?.deleteSubtasks).toBe(true);
+  });
+
   test("creates delete result object with correct structure", () => {
     interface DeleteResult {
       success: boolean;

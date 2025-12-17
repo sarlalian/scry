@@ -56,15 +56,41 @@ export interface Config {
   output: OutputConfig;
 }
 
+/**
+ * Validates if a string is a valid URL
+ * @param url - The URL to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidUrl(url: string): boolean {
+  // URL regex pattern that matches http/https URLs
+  const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+  return urlPattern.test(url);
+}
+
+/**
+ * Validates if a string is a valid email format
+ * @param email - The email to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidEmail(email: string): boolean {
+  // Email regex pattern following RFC 5322 simplified
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(email);
+}
+
 export function validateConfig(config: ConfigSchema): string[] {
   const errors: string[] = [];
 
   if (!config.server) {
     errors.push("server is required");
+  } else if (!isValidUrl(config.server)) {
+    errors.push("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
   }
 
   if (!config.login) {
     errors.push("login is required");
+  } else if (!isValidEmail(config.login)) {
+    errors.push("login must be a valid email address (e.g., user@example.com)");
   }
 
   if (config.auth?.type && !["basic", "bearer"].includes(config.auth.type)) {

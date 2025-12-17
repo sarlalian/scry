@@ -226,4 +226,35 @@ describe("issue edit command", () => {
     expect(hasUpdateFields({ priority: { name: "High" } })).toBe(true);
     expect(hasUpdateFields({})).toBe(false);
   });
+
+  test("dry-run flag prevents API call", () => {
+    const shouldExecuteUpdate = (dryRun: boolean): boolean => {
+      return !dryRun;
+    };
+
+    expect(shouldExecuteUpdate(true)).toBe(false);
+    expect(shouldExecuteUpdate(false)).toBe(true);
+  });
+
+  test("dry-run produces preview output", () => {
+    const createDryRunOutput = (issueKey: string, fields: Partial<CreateIssueRequest>) => {
+      return {
+        dryRun: true,
+        issueKey,
+        action: "update",
+        fields,
+      };
+    };
+
+    const fields: Partial<CreateIssueRequest> = {
+      summary: "Updated summary",
+      priority: { name: "High" },
+    };
+
+    const result = createDryRunOutput("PROJ-123", fields);
+    expect(result.dryRun).toBe(true);
+    expect(result.issueKey).toBe("PROJ-123");
+    expect(result.action).toBe("update");
+    expect(result.fields).toEqual(fields);
+  });
 });

@@ -5,7 +5,7 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
-import { success, error, warning } from "../../../utils/messages.ts";
+import { success, error, warning, dryRun } from "../../../utils/messages.ts";
 import { parseIssueKeys, requireValidIssueKeys } from "../../../utils/validation.ts";
 
 interface DeleteResult {
@@ -84,12 +84,14 @@ export const deleteCommand = new Command("delete")
   .argument("<issue-keys...>", "Issue keys to delete (e.g., PROJ-123 PROJ-124)")
   .option("-f, --force", "Skip confirmation prompt")
   .option("-s, --delete-subtasks", "Delete subtasks along with the issue")
+  .option("--dry-run", "Preview what would be deleted without making changes")
   .action(async function (this: Command, issueKeysInput: string[], opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
     const force = opts["force"] as boolean | undefined;
     const deleteSubtasks = opts["deleteSubtasks"] as boolean | undefined;
+    const isDryRun = opts["dryRun"] as boolean | undefined;
 
     try {
       if (!issueKeysInput || issueKeysInput.length === 0) {
@@ -103,6 +105,32 @@ export const deleteCommand = new Command("delete")
       }
 
       requireValidIssueKeys(issueKeys);
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          if (issueKeys.length === 1) {
+            console.log(dryRun(`Would delete issue ${chalk.bold(issueKeys[0])}`));
+          } else {
+            console.log(dryRun(`Would delete ${chalk.bold(issueKeys.length.toString())} issues:`));
+            issueKeys.forEach((key) => console.log(chalk.dim(`  - ${key}`)));
+          }
+
+          if (deleteSubtasks) {
+            console.log(chalk.magenta.dim("  Subtasks would also be deleted with their parent issues."));
+          }
+          console.log("");
+        } else {
+          const dryRunResults = issueKeys.map((key) => ({
+            issueKey: key,
+            action: "delete",
+            deleteSubtasks: deleteSubtasks ?? false,
+            dryRun: true,
+          }));
+          output({ dryRun: true, actions: dryRunResults }, format);
+        }
+        return;
+      }
 
       if (!force) {
         if (format === "table" || format === "plain") {

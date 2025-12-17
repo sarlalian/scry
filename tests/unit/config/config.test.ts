@@ -163,6 +163,114 @@ describe("validateConfig", () => {
     });
     expect(errors).toContain("board.type must be 'scrum' or 'kanban'");
   });
+
+  describe("URL validation", () => {
+    test("rejects invalid URL format", () => {
+      const errors = validateConfig({
+        server: "not-a-valid-url",
+        login: "test@example.com",
+      });
+      expect(errors).toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+
+    test("rejects URL without protocol", () => {
+      const errors = validateConfig({
+        server: "test.atlassian.net",
+        login: "test@example.com",
+      });
+      expect(errors).toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+
+    test("accepts http URLs", () => {
+      const errors = validateConfig({
+        server: "http://test.atlassian.net",
+        login: "test@example.com",
+      });
+      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+
+    test("accepts https URLs", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "test@example.com",
+      });
+      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+
+    test("accepts URLs with paths", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net/jira",
+        login: "test@example.com",
+      });
+      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+
+    test("accepts URLs with ports", () => {
+      const errors = validateConfig({
+        server: "https://localhost:8080",
+        login: "test@example.com",
+      });
+      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+    });
+  });
+
+  describe("Email validation", () => {
+    test("rejects invalid email format", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "not-an-email",
+      });
+      expect(errors).toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("rejects email without @", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "testexample.com",
+      });
+      expect(errors).toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("rejects email without domain", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "test@",
+      });
+      expect(errors).toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("rejects email without TLD", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "test@example",
+      });
+      expect(errors).toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("accepts valid email with subdomain", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "test@mail.example.com",
+      });
+      expect(errors).not.toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("accepts valid email with plus addressing", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "test+tag@example.com",
+      });
+      expect(errors).not.toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+
+    test("accepts valid email with dots", () => {
+      const errors = validateConfig({
+        server: "https://test.atlassian.net",
+        login: "first.last@example.com",
+      });
+      expect(errors).not.toContain("login must be a valid email address (e.g., user@example.com)");
+    });
+  });
 });
 
 describe("getDefaultConfig", () => {

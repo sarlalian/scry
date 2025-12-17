@@ -5,7 +5,7 @@ import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { IssueLink } from "../../../api/types/issue.ts";
-import { success, error } from "../../../utils/messages.ts";
+import { success, error, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface UnlinkResult {
@@ -49,10 +49,13 @@ export const unlinkCommand = new Command("unlink")
   .description("Remove a link between two issues")
   .argument("<source-key>", "Source issue key (e.g., PROJ-123)")
   .argument("<target-key>", "Target issue key (e.g., PROJ-456)")
+  .option("--dry-run", "Preview what would be unlinked without making changes")
   .action(async function (this: Command, sourceKey: string, targetKey: string) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
+    const opts = this.opts();
+    const isDryRun = opts["dryRun"] as boolean | undefined;
 
     try {
       requireValidIssueKey(sourceKey);
@@ -91,6 +94,29 @@ export const unlinkCommand = new Command("unlink")
       const linkToRemove = matchingLinks[0];
       if (!linkToRemove) {
         throw new Error("Unexpected error: link not found");
+      }
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          console.log(
+            dryRun(`Would remove link between ${chalk.bold(sourceKey)} and ${chalk.bold(targetKey)}`)
+          );
+          console.log(chalk.dim(`  Link: ${formatLinkDisplay(linkToRemove, sourceKey)}`));
+          console.log("");
+        } else {
+          output(
+            {
+              dryRun: true,
+              action: "unlink",
+              sourceKey,
+              targetKey,
+              linkId: linkToRemove.id,
+            },
+            format
+          );
+        }
+        return;
       }
 
       await issueEndpoint.unlink(linkToRemove.id);

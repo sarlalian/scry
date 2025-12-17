@@ -31,3 +31,10 @@ export function warning(message: string): string {
 export function info(message: string): string {
   return `${chalk.blue("ℹ")} ${message}`;
 }
+
+/**
+ * Format a dry-run message with magenta symbol
+ */
+export function dryRun(message: string): string {
+  return `${chalk.magenta("◆")} ${chalk.magenta("DRY RUN:")} ${message}`;
+}

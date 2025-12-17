@@ -12,7 +12,7 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { Transition } from "../../../api/types/issue.ts";
-import { success, error, warning } from "../../../utils/messages.ts";
+import { success, error, warning, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 
 interface TransitionTableRow {
@@ -47,6 +47,7 @@ export const moveCommand = new Command("move")
   .argument("<issue-key>", "Issue key (e.g., PROJ-123)")
   .argument("[target-status]", "Target status or transition name")
   .option("-i, --interactive", "Select transition interactively")
+  .option("--dry-run", "Preview what would be transitioned without making changes")
   .action(async function (
     this: Command,
     issueKey: string,
@@ -57,6 +58,7 @@ export const moveCommand = new Command("move")
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
     const interactive = opts?.["interactive"] as boolean | undefined;
+    const isDryRun = opts?.["dryRun"] as boolean | undefined;
 
     try {
       requireValidIssueKey(issueKey);
@@ -165,6 +167,30 @@ export const moveCommand = new Command("move")
       if (!selectedTransition) {
         outputError("No transition selected", format);
         throw new Error("No transition selected");
+      }
+
+      if (isDryRun) {
+        if (format === "table" || format === "plain") {
+          console.log("");
+          console.log(
+            dryRun(
+              `Would transition issue ${chalk.bold(issueKey)} from ${chalk.dim("current status")} to ${chalk.bold(selectedTransition.to.name)} via ${chalk.dim(selectedTransition.name)}`
+            )
+          );
+          console.log("");
+        } else {
+          output(
+            {
+              dryRun: true,
+              issueKey,
+              action: "transition",
+              transition: selectedTransition.name,
+              toStatus: selectedTransition.to.name,
+            },
+            format
+          );
+        }
+        return;
       }
 
       await issueEndpoint.transition(issueKey, selectedTransition.id);
