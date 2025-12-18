@@ -12,7 +12,8 @@ import { success } from "../../../utils/messages.ts";
 function formatCreatedEpic(epic: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Epic created successfully!") + "\n" +
+      success("Epic created successfully!") +
+      "\n" +
       chalk.cyan(`Key: ${epic.key}\n`) +
       chalk.dim(`ID: ${epic.id}\n`) +
       chalk.dim(`URL: ${epic.self}`)

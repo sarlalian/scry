@@ -309,11 +309,7 @@ describe("issue move command", () => {
   });
 
   test("dry-run produces preview output", () => {
-    const createDryRunOutput = (
-      issueKey: string,
-      transition: string,
-      toStatus: string
-    ) => {
+    const createDryRunOutput = (issueKey: string, transition: string, toStatus: string) => {
       return {
         dryRun: true,
         issueKey,

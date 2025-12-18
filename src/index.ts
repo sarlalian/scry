@@ -7,7 +7,12 @@ async function main() {
   try {
     await cli.parseAsync(process.argv);
   } catch (err) {
-    if (err instanceof ScryError || err instanceof AuthError || err instanceof JiraApiError || err instanceof ConfigError) {
+    if (
+      err instanceof ScryError ||
+      err instanceof AuthError ||
+      err instanceof JiraApiError ||
+      err instanceof ConfigError
+    ) {
       console.error(`Error: ${err.message}`);
       if (process.env.DEBUG) {
         console.error(err.stack);

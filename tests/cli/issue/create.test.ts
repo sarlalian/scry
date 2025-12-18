@@ -17,7 +17,6 @@ describeWithCredentials("issue create CLI", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Create a new Jira issue");
-      expect(result.stdout).toContain("-p, --project");
       expect(result.stdout).toContain("-t, --type");
       expect(result.stdout).toContain("-s, --summary");
     });
@@ -26,7 +25,7 @@ describeWithCredentials("issue create CLI", () => {
       const result = await runScry(["issue", "create", "--help"]);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("--project");
+      // Note: --project is a global option (scry -p PROJECT issue create ...)
       expect(result.stdout).toContain("--type");
       expect(result.stdout).toContain("--summary");
       expect(result.stdout).toContain("--description");

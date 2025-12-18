@@ -20,7 +20,8 @@ function parseDate(dateStr?: string): string | undefined {
 function formatCreatedSprint(sprint: Sprint, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Sprint created successfully!") + "\n" +
+      success("Sprint created successfully!") +
+      "\n" +
       chalk.cyan(`ID: ${sprint.id}\n`) +
       chalk.cyan(`Name: ${sprint.name}\n`) +
       chalk.cyan(`State: ${sprint.state.toUpperCase()}\n`) +

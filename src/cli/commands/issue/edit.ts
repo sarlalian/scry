@@ -42,7 +42,8 @@ function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
 function formatUpdatedIssue(issue: Issue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Issue updated successfully!") + "\n" +
+      success("Issue updated successfully!") +
+      "\n" +
       chalk.cyan(`Key: ${issue.key}\n`) +
       chalk.dim(`Summary: ${issue.fields.summary}\n`) +
       chalk.dim(`Status: ${issue.fields.status.name}`)
@@ -276,7 +277,9 @@ export const editCommand = new Command("edit")
       if (isDryRun) {
         if (format === "table" || format === "plain") {
           console.log("");
-          console.log(dryRun(`Would update issue ${chalk.bold(issueKey)} with the following fields:`));
+          console.log(
+            dryRun(`Would update issue ${chalk.bold(issueKey)} with the following fields:`)
+          );
           console.log("");
 
           if (fields.summary) {
@@ -288,14 +291,18 @@ export const editCommand = new Command("edit")
           if (fields.assignee) {
             console.log(chalk.dim(`  Assignee: ${fields.assignee.accountId || "Unassigned"}`));
           }
-          if (fields.priority) {
+          if (fields.priority && "name" in fields.priority) {
             console.log(chalk.dim(`  Priority: ${fields.priority.name}`));
           }
           if (fields.labels) {
             console.log(chalk.dim(`  Labels: ${fields.labels.join(", ")}`));
           }
           if (fields.components) {
-            console.log(chalk.dim(`  Components: ${fields.components.map((c) => c.name).join(", ")}`));
+            console.log(
+              chalk.dim(
+                `  Components: ${fields.components.map((c) => ("name" in c ? c.name : c.id)).join(", ")}`
+              )
+            );
           }
           console.log("");
         } else {

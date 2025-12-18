@@ -266,11 +266,7 @@ describe("issue unlink command", () => {
   });
 
   test("dry-run produces preview output", () => {
-    const createDryRunOutput = (
-      sourceKey: string,
-      targetKey: string,
-      linkId: string
-    ) => {
+    const createDryRunOutput = (sourceKey: string, targetKey: string, linkId: string) => {
       return {
         dryRun: true,
         action: "unlink",

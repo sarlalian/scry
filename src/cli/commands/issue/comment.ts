@@ -12,7 +12,8 @@ import { success } from "../../../utils/messages.ts";
 function formatComment(comment: Comment, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Comment added successfully!") + "\n" +
+      success("Comment added successfully!") +
+      "\n" +
       chalk.cyan(`ID: ${comment.id}\n`) +
       chalk.dim(`Author: ${comment.author.displayName}\n`) +
       chalk.dim(`Created: ${comment.created}`)

@@ -92,15 +92,17 @@ describe("IssueEndpoint", () => {
         updated: "2025-01-01T00:00:00.000Z",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockComment));
       const mockClient = {
-        post: mock(() => Promise.resolve(mockComment)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.addComment("SCRY-123", "Line 1\nLine 2");
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].body.content).toHaveLength(2);
     });
 
@@ -126,8 +128,9 @@ describe("IssueEndpoint", () => {
         updated: "2025-01-01T00:00:00.000Z",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockComment));
       const mockClient = {
-        post: mock(() => Promise.resolve(mockComment)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
@@ -135,8 +138,9 @@ describe("IssueEndpoint", () => {
         visibility: { type: "role", value: "Developers" },
       });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].visibility).toEqual({ type: "role", value: "Developers" });
     });
 
@@ -162,15 +166,17 @@ describe("IssueEndpoint", () => {
         updated: "2025-01-01T00:00:00.000Z",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockComment));
       const mockClient = {
-        post: mock(() => Promise.resolve(mockComment)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.addComment("SCRY-123", "");
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].body.content[0].content[0].text).toBe("");
     });
   });
@@ -215,15 +221,17 @@ describe("IssueEndpoint", () => {
         started: "2025-01-01T00:00:00.000Z",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockWorklog));
       const mockClient = {
-        post: mock(() => Promise.resolve(mockWorklog)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.addWorklog("SCRY-123", "1h 30m", { comment: "Worked on feature X" });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].comment).toBeDefined();
       expect(callArgs[1].comment.content[0].content[0].text).toBe("Worked on feature X");
     });
@@ -241,8 +249,9 @@ describe("IssueEndpoint", () => {
         started: "2025-01-01T09:00:00.000Z",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockWorklog));
       const mockClient = {
-        post: mock(() => Promise.resolve(mockWorklog)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
@@ -250,8 +259,9 @@ describe("IssueEndpoint", () => {
         started: "2025-01-01T09:00:00.000Z",
       });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].started).toBe("2025-01-01T09:00:00.000Z");
     });
   });
@@ -512,16 +522,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/456",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { summary: "Custom Clone Summary" });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.summary).toBe("Custom Clone Summary");
     });
 
@@ -555,16 +567,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/789",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { project: "OTHER" });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.project.key).toBe("OTHER");
     });
 
@@ -608,16 +622,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/456",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { description: false });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.description).toBeUndefined();
     });
 
@@ -652,16 +668,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/456",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { components: [{ name: "New Component" }] });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.components).toEqual([{ name: "New Component" }]);
     });
 
@@ -696,16 +714,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/456",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { labels: ["new-label"] });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.labels).toEqual(["existing", "new-label"]);
     });
 
@@ -740,16 +760,18 @@ describe("IssueEndpoint", () => {
         self: "https://example.atlassian.net/rest/api/3/issue/456",
       };
 
+      const mockPost = mock(() => Promise.resolve(mockCreated));
       const mockClient = {
         get: mock(() => Promise.resolve(mockOriginal)),
-        post: mock(() => Promise.resolve(mockCreated)),
+        post: mockPost,
       } as unknown as JiraClient;
 
       const endpoint = new IssueEndpoint(mockClient);
       await endpoint.clone("SCRY-123", { priority: { name: "High" } });
 
-      expect(mockClient.post).toHaveBeenCalled();
-      const callArgs = (mockClient.post as any).mock.calls[0];
+      expect(mockPost).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPost.mock.calls[0] as any[];
       expect(callArgs[1].fields.priority).toEqual({ name: "High" });
     });
   });

@@ -12,7 +12,8 @@ function formatSuccessMessage(sprintId: number, issueKeys: string[]): string {
   const issueText = issueCount === 1 ? "issue" : "issues";
   const issueList = issueKeys.join(", ");
   return (
-    success(`Successfully added ${issueCount} ${issueText} to sprint ${sprintId}`) + "\n" +
+    success(`Successfully added ${issueCount} ${issueText} to sprint ${sprintId}`) +
+    "\n" +
     chalk.dim(`Issues: ${issueList}`)
   );
 }

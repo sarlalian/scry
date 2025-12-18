@@ -12,7 +12,8 @@ import { success } from "../../../utils/messages.ts";
 function formatClonedIssue(issue: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Issue cloned successfully!") + "\n" +
+      success("Issue cloned successfully!") +
+      "\n" +
       chalk.cyan(`Key: ${issue.key}\n`) +
       chalk.dim(`ID: ${issue.id}\n`) +
       chalk.dim(`URL: ${issue.self}`)

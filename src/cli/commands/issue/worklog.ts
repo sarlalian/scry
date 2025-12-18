@@ -17,7 +17,8 @@ function validateTimeFormat(time: string): boolean {
 function formatWorklog(worklog: Worklog, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     let result =
-      success("Worklog added successfully!") + "\n" +
+      success("Worklog added successfully!") +
+      "\n" +
       chalk.cyan(`ID: ${worklog.id}\n`) +
       chalk.dim(`Time Spent: ${worklog.timeSpent}\n`) +
       chalk.dim(`Author: ${worklog.author.displayName}\n`) +

@@ -117,7 +117,9 @@ export const initCommand = new Command("init")
           const userEndpoint = new UserEndpoint(client);
           const user = await userEndpoint.getMyself();
           console.log(
-            "\n" + success(`Connected successfully as ${user.displayName} (${user.emailAddress})`) + "\n"
+            "\n" +
+              success(`Connected successfully as ${user.displayName} (${user.emailAddress})`) +
+              "\n"
           );
         } catch (err) {
           console.log(

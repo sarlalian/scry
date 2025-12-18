@@ -25,9 +25,15 @@ function formatRemoveResult(result: RemoveResult, format: OutputFormat): string 
 
     if (successCount > 0) {
       if (successCount === 1 && result.results.length === 1) {
-        message += success(`Issue ${result.results[0]?.issueKey} has been removed from epic ${result.epicKey}`) + "\n";
+        message +=
+          success(
+            `Issue ${result.results[0]?.issueKey} has been removed from epic ${result.epicKey}`
+          ) + "\n";
       } else {
-        message += success(`${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been removed from epic ${result.epicKey}`) + "\n";
+        message +=
+          success(
+            `${successCount} issue${successCount > 1 ? "s" : ""} ${successCount > 1 ? "have" : "has"} been removed from epic ${result.epicKey}`
+          ) + "\n";
       }
     }
 

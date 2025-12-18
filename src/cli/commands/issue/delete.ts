@@ -117,7 +117,9 @@ export const deleteCommand = new Command("delete")
           }
 
           if (deleteSubtasks) {
-            console.log(chalk.magenta.dim("  Subtasks would also be deleted with their parent issues."));
+            console.log(
+              chalk.magenta.dim("  Subtasks would also be deleted with their parent issues.")
+            );
           }
           console.log("");
         } else {

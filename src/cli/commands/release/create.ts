@@ -21,7 +21,8 @@ function parseDate(dateStr?: string): string | undefined {
 function formatCreatedVersion(version: Version, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Release created successfully!") + "\n" +
+      success("Release created successfully!") +
+      "\n" +
       chalk.cyan(`ID: ${version.id}\n`) +
       chalk.cyan(`Name: ${version.name}\n`) +
       (version.description ? chalk.dim(`Description: ${version.description}\n`) : "") +

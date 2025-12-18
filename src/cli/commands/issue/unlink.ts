@@ -100,7 +100,9 @@ export const unlinkCommand = new Command("unlink")
         if (format === "table" || format === "plain") {
           console.log("");
           console.log(
-            dryRun(`Would remove link between ${chalk.bold(sourceKey)} and ${chalk.bold(targetKey)}`)
+            dryRun(
+              `Would remove link between ${chalk.bold(sourceKey)} and ${chalk.bold(targetKey)}`
+            )
           );
           console.log(chalk.dim(`  Link: ${formatLinkDisplay(linkToRemove, sourceKey)}`));
           console.log("");

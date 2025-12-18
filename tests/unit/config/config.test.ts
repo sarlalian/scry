@@ -170,7 +170,9 @@ describe("validateConfig", () => {
         server: "not-a-valid-url",
         login: "test@example.com",
       });
-      expect(errors).toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
 
     test("rejects URL without protocol", () => {
@@ -178,7 +180,9 @@ describe("validateConfig", () => {
         server: "test.atlassian.net",
         login: "test@example.com",
       });
-      expect(errors).toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
 
     test("accepts http URLs", () => {
@@ -186,7 +190,9 @@ describe("validateConfig", () => {
         server: "http://test.atlassian.net",
         login: "test@example.com",
       });
-      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).not.toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
 
     test("accepts https URLs", () => {
@@ -194,7 +200,9 @@ describe("validateConfig", () => {
         server: "https://test.atlassian.net",
         login: "test@example.com",
       });
-      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).not.toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
 
     test("accepts URLs with paths", () => {
@@ -202,7 +210,9 @@ describe("validateConfig", () => {
         server: "https://test.atlassian.net/jira",
         login: "test@example.com",
       });
-      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).not.toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
 
     test("accepts URLs with ports", () => {
@@ -210,7 +220,9 @@ describe("validateConfig", () => {
         server: "https://localhost:8080",
         login: "test@example.com",
       });
-      expect(errors).not.toContain("server must be a valid URL (e.g., https://your-domain.atlassian.net)");
+      expect(errors).not.toContain(
+        "server must be a valid URL (e.g., https://your-domain.atlassian.net)"
+      );
     });
   });
 

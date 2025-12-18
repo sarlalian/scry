@@ -12,7 +12,8 @@ import { success } from "../../../utils/messages.ts";
 function formatCreatedIssue(issue: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
     return (
-      success("Issue created successfully!") + "\n" +
+      success("Issue created successfully!") +
+      "\n" +
       chalk.cyan(`Key: ${issue.key}\n`) +
       chalk.dim(`ID: ${issue.id}\n`) +
       chalk.dim(`URL: ${issue.self}`)
@@ -24,7 +25,6 @@ function formatCreatedIssue(issue: CreatedIssue, format: OutputFormat): string {
 export const createCommand = new Command("create")
   .alias("new")
   .description("Create a new Jira issue")
-  .option("-p, --project <key>", "Project key")
   .option("-t, --type <type>", "Issue type (e.g., Task, Bug, Story)")
   .option("-s, --summary <text>", "Issue summary")
   .option("-d, --description <text>", "Issue description")
@@ -46,7 +46,7 @@ export const createCommand = new Command("create")
       const client = new JiraClient(config);
       const issueEndpoint = new IssueEndpoint(client);
 
-      let projectKey = opts["project"] as string | undefined;
+      let projectKey = projectKeyGlobal ?? config.project?.key;
       let issueType = opts["type"] as string | undefined;
       let summary = opts["summary"] as string | undefined;
       let description = opts["description"] as string | undefined;
@@ -54,7 +54,7 @@ export const createCommand = new Command("create")
       let priority = opts["priority"] as string | undefined;
       let labels = opts["labels"] as string | undefined;
       let components = opts["components"] as string | undefined;
-      let parent = opts["parent"] as string | undefined;
+      let parentKey = opts["parent"] as string | undefined;
 
       const needsInteractive = opts["interactive"] || !projectKey || !issueType || !summary;
 
@@ -162,8 +162,8 @@ export const createCommand = new Command("create")
           }
         }
 
-        if (!parent && issueType === "Subtask") {
-          parent = await input({
+        if (!parentKey && issueType === "Subtask") {
+          parentKey = await input({
             message: "Parent issue key (required for subtasks):",
             validate: (value) => {
               if (!value.trim()) {
@@ -172,11 +172,6 @@ export const createCommand = new Command("create")
               return true;
             },
           });
-        }
-      } else {
-        projectKey = projectKey || projectKeyGlobal || config.project?.key;
-        if (!projectKey) {
-          throw new Error("Project key is required. Use --project flag or set default project.");
         }
       }
 
@@ -210,8 +205,8 @@ export const createCommand = new Command("create")
         fields.components = parseComponents(components);
       }
 
-      if (parent) {
-        fields.parent = { key: parent };
+      if (parentKey) {
+        fields.parent = { key: parentKey };
       }
 
       if (globalOpts["debug"]) {

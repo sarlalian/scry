@@ -269,11 +269,7 @@ describe("issue link command", () => {
   });
 
   test("dry-run produces preview output", () => {
-    const createDryRunOutput = (
-      sourceKey: string,
-      targetKey: string,
-      linkType: string
-    ) => {
+    const createDryRunOutput = (sourceKey: string, targetKey: string, linkType: string) => {
       return {
         dryRun: true,
         action: "link",

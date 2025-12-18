@@ -160,7 +160,9 @@ export const moveCommand = new Command("move")
               format
             );
           }
-          throw new Error(`Transition "${selectedTransition.name}" is not available for ${issueKey}`);
+          throw new Error(
+            `Transition "${selectedTransition.name}" is not available for ${issueKey}`
+          );
         }
       }
 
@@ -197,9 +199,7 @@ export const moveCommand = new Command("move")
 
       if (format === "table" || format === "plain") {
         console.log(
-          success(
-            `Successfully moved ${issueKey} to ${chalk.bold(selectedTransition.to.name)}`
-          )
+          success(`Successfully moved ${issueKey} to ${chalk.bold(selectedTransition.to.name)}`)
         );
       } else {
         output(
