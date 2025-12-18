@@ -8,6 +8,7 @@ import type { CreateIssueRequest, CreatedIssue } from "../../../api/types/issue.
 import { parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 import { success } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function formatClonedIssue(issue: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
@@ -32,8 +33,11 @@ export const cloneCommand = new Command("clone")
   .option("-C, --components <components>", "Override components (comma-separated names)")
   .option("-y, --priority <priority>", "Override priority (e.g., High, Medium, Low)")
   .option("--no-description", "Do not copy description from source issue")
-  .option("--link", "Create 'Cloners' link between source and cloned issue")
-  .action(async function (this: Command, issueKey: string, opts) {
+  .option("--link", "Create 'Cloners' link between source and cloned issue");
+
+addGlobalOptionsHelp(cloneCommand);
+
+cloneCommand.action(async function (this: Command, issueKey: string, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

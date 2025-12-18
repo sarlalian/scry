@@ -6,6 +6,7 @@ import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import { success, error } from "../../../utils/messages.ts";
 import { requireValidIssueKey, requireValidIssueKeys } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface AddResult {
   epicKey: string;
@@ -53,8 +54,11 @@ function formatAddResult(result: AddResult, format: OutputFormat): string {
 export const addCommand = new Command("add")
   .description("Add issues to an epic")
   .argument("<epic-key>", "Epic key (e.g., PROJ-100)")
-  .argument("<issue-keys...>", "Issue keys to add to the epic (e.g., PROJ-123 PROJ-124)")
-  .action(async function (this: Command, epicKey: string, issueKeys: string[]) {
+  .argument("<issue-keys...>", "Issue keys to add to the epic (e.g., PROJ-123 PROJ-124)");
+
+addGlobalOptionsHelp(addCommand);
+
+addCommand.action(async function (this: Command, epicKey: string, issueKeys: string[]) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

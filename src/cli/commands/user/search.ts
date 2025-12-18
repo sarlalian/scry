@@ -11,6 +11,7 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { User } from "../../../api/types/user.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 const USER_COLUMNS: TableColumn[] = [
   { key: "accountId", header: "Account ID", width: 28 },
@@ -39,8 +40,11 @@ export const searchCommand = new Command("search")
   .description("Search for Jira users")
   .argument("<query>", "Search query string")
   .option("--limit <n>", "Maximum number of results", "50")
-  .option("--start-at <n>", "Starting index for pagination", "0")
-  .action(async function (this: Command, query: string, opts) {
+  .option("--start-at <n>", "Starting index for pagination", "0");
+
+addGlobalOptionsHelp(searchCommand);
+
+searchCommand.action(async function (this: Command, query: string, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

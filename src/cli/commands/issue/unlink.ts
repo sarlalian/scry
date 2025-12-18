@@ -7,6 +7,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { IssueLink } from "../../../api/types/issue.ts";
 import { success, error, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface UnlinkResult {
   success: boolean;
@@ -49,8 +50,11 @@ export const unlinkCommand = new Command("unlink")
   .description("Remove a link between two issues")
   .argument("<source-key>", "Source issue key (e.g., PROJ-123)")
   .argument("<target-key>", "Target issue key (e.g., PROJ-456)")
-  .option("--dry-run", "Preview what would be unlinked without making changes")
-  .action(async function (this: Command, sourceKey: string, targetKey: string) {
+  .option("--dry-run", "Preview what would be unlinked without making changes");
+
+addGlobalOptionsHelp(unlinkCommand);
+
+unlinkCommand.action(async function (this: Command, sourceKey: string, targetKey: string) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

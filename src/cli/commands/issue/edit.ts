@@ -10,6 +10,7 @@ import type { AtlassianDocument, InlineNode } from "../../../api/types/common.ts
 import { textToAdf, parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 import { success, dryRun } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
   if (!doc || !doc.content) return "";
@@ -63,8 +64,11 @@ export const editCommand = new Command("edit")
   .option("-l, --labels <labels>", "Update labels (comma-separated)")
   .option("-C, --components <components>", "Update components (comma-separated)")
   .option("-i, --interactive", "Interactive mode with prompts showing current values")
-  .option("--dry-run", "Preview what would be updated without making changes")
-  .action(async function (this: Command, issueKey: string, opts) {
+  .option("--dry-run", "Preview what would be updated without making changes");
+
+addGlobalOptionsHelp(editCommand);
+
+editCommand.action(async function (this: Command, issueKey: string, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

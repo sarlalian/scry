@@ -6,6 +6,7 @@ import { SprintEndpoint } from "../../../api/endpoints/sprint.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import { success } from "../../../utils/messages.ts";
 import { requireValidIssueKeys } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function formatSuccessMessage(sprintId: number, issueKeys: string[]): string {
   const issueCount = issueKeys.length;
@@ -21,8 +22,11 @@ function formatSuccessMessage(sprintId: number, issueKeys: string[]): string {
 export const addCommand = new Command("add")
   .description("Add issues to a sprint")
   .argument("<sprint-id>", "Sprint ID")
-  .argument("<issue-keys...>", "Issue keys to add (e.g., SCRY-123 SCRY-456)")
-  .action(async function (this: Command, sprintIdStr: string, issueKeys: string[]) {
+  .argument("<issue-keys...>", "Issue keys to add (e.g., SCRY-123 SCRY-456)");
+
+addGlobalOptionsHelp(addCommand);
+
+addCommand.action(async function (this: Command, sprintIdStr: string, issueKeys: string[]) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

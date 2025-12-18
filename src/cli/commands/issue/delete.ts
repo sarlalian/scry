@@ -7,6 +7,7 @@ import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import { success, error, warning, dryRun } from "../../../utils/messages.ts";
 import { parseIssueKeys, requireValidIssueKeys } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface DeleteResult {
   success: boolean;
@@ -84,8 +85,11 @@ export const deleteCommand = new Command("delete")
   .argument("<issue-keys...>", "Issue keys to delete (e.g., PROJ-123 PROJ-124)")
   .option("-f, --force", "Skip confirmation prompt")
   .option("-s, --delete-subtasks", "Delete subtasks along with the issue")
-  .option("--dry-run", "Preview what would be deleted without making changes")
-  .action(async function (this: Command, issueKeysInput: string[], opts) {
+  .option("--dry-run", "Preview what would be deleted without making changes");
+
+addGlobalOptionsHelp(deleteCommand);
+
+deleteCommand.action(async function (this: Command, issueKeysInput: string[], opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

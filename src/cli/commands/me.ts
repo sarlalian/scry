@@ -4,10 +4,14 @@ import { getConfigManager } from "../../config/index.ts";
 import { JiraClient } from "../../api/client.ts";
 import { UserEndpoint } from "../../api/endpoints/user.ts";
 import { output, outputError, type OutputFormat } from "../../output/index.ts";
+import { addGlobalOptionsHelp } from "../help.ts";
 
 export const meCommand = new Command("me")
-  .description("Get current user information")
-  .action(async function (this: Command) {
+  .description("Get current user information");
+
+addGlobalOptionsHelp(meCommand);
+
+meCommand.action(async function (this: Command) {
     const parent = this.parent;
     const opts = parent?.opts() ?? {};
     const format = (opts["output"] as OutputFormat) ?? "table";

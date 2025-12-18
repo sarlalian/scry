@@ -11,6 +11,7 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { Sprint, SprintState } from "../../../api/types/sprint.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 const SPRINT_COLUMNS: TableColumn[] = [
   { key: "id", header: "ID", width: 8 },
@@ -49,8 +50,11 @@ export const listCommand = new Command("list")
   .option("-s, --state <state>", "Filter by state (active, closed, future)")
   .option("--start-at <n>", "Start index for pagination", "0")
   .option("--limit <n>", "Maximum results", "50")
-  .option("--columns <cols>", "Columns to display (comma-separated)")
-  .action(async function (this: Command, opts) {
+  .option("--columns <cols>", "Columns to display (comma-separated)");
+
+addGlobalOptionsHelp(listCommand);
+
+listCommand.action(async function (this: Command, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

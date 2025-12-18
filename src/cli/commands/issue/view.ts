@@ -4,7 +4,7 @@ import { getConfigManager } from "../../../config/index.ts";
 import { JiraClient } from "../../../api/client.ts";
 import { IssueEndpoint } from "../../../api/endpoints/issue.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
-import type { Issue } from "../../../api/types/issue.ts";
+import type { Issue, Comment } from "../../../api/types/issue.ts";
 import type {
   AtlassianDocument,
   AtlassianNode,
@@ -12,6 +12,30 @@ import type {
   TextNode,
 } from "../../../api/types/common.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
+
+interface BriefIssue {
+  key: string;
+  summary: string;
+  description: string | null;
+  status: string;
+  type: string;
+  priority: string | null;
+  assignee: { name: string; accountId: string } | null;
+  reporter: { name: string; accountId: string } | null;
+  project: { key: string; name: string };
+  labels: string[];
+  components: string[];
+  fixVersions: string[];
+  parent: string | null;
+  created: string;
+  updated: string;
+  comments?: Array<{
+    author: string;
+    created: string;
+    body: string;
+  }>;
+}
 
 function adfToPlainText(doc: AtlassianDocument | null | undefined): string {
   if (!doc || !doc.content) return "";
@@ -123,15 +147,56 @@ function formatIssueDetails(issue: Issue): string {
   return lines.join("\n");
 }
 
+function toBriefIssue(issue: Issue, commentCount: number): BriefIssue {
+  const f = issue.fields;
+
+  const brief: BriefIssue = {
+    key: issue.key,
+    summary: f.summary,
+    description: f.description ? adfToPlainText(f.description) : null,
+    status: f.status.name,
+    type: f.issuetype.name,
+    priority: f.priority?.name ?? null,
+    assignee: f.assignee
+      ? { name: f.assignee.displayName, accountId: f.assignee.accountId }
+      : null,
+    reporter: f.reporter
+      ? { name: f.reporter.displayName, accountId: f.reporter.accountId }
+      : null,
+    project: { key: f.project.key, name: f.project.name },
+    labels: f.labels ?? [],
+    components: f.components?.map((c) => c.name) ?? [],
+    fixVersions: f.fixVersions?.map((v) => v.name) ?? [],
+    parent: f.parent?.key ?? null,
+    created: f.created,
+    updated: f.updated,
+  };
+
+  if (commentCount > 0 && f.comment?.comments) {
+    brief.comments = f.comment.comments.slice(-commentCount).map((c: Comment) => ({
+      author: c.author.displayName,
+      created: c.created,
+      body: adfToPlainText(c.body),
+    }));
+  }
+
+  return brief;
+}
+
 export const viewCommand = new Command("view")
   .alias("show")
   .description("View issue details")
   .argument("<issue-key>", "Issue key (e.g., PROJ-123)")
   .option("--comments <n>", "Show n recent comments", "0")
-  .action(async function (this: Command, issueKey: string, opts) {
+  .option("-b, --brief", "Output simplified data for AI agents (JSON/XML only)");
+
+addGlobalOptionsHelp(viewCommand);
+
+viewCommand.action(async function (this: Command, issueKey: string, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
+    const isBrief = opts["brief"] as boolean | undefined;
 
     try {
       requireValidIssueKey(issueKey);
@@ -185,7 +250,11 @@ export const viewCommand = new Command("view")
           }
         }
       } else {
-        output(issue, format);
+        if (isBrief) {
+          output(toBriefIssue(issue, commentCount), format);
+        } else {
+          output(issue, format);
+        }
       }
     } catch (err) {
       outputError(err instanceof Error ? err : String(err), format);

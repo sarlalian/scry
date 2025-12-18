@@ -8,6 +8,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { Worklog } from "../../../api/types/issue.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 import { success } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function validateTimeFormat(time: string): boolean {
   const timePattern = /^(\d+w)?(\d+d)?(\d+h)?(\d+m)?$/;
@@ -43,19 +44,19 @@ function formatWorklog(worklog: Worklog, format: OutputFormat): string {
   return "";
 }
 
-export const worklogCommand = new Command("worklog")
-  .description("Manage issue worklogs")
-  .addCommand(
-    new Command("add")
-      .description("Add a worklog entry to an issue")
-      .argument("<issueKey>", "Issue key (e.g., PROJ-123)")
-      .option("-t, --time <duration>", "Time spent (e.g., 2h, 30m, 1d, 1w)")
-      .option("-c, --comment <text>", "Comment or description for the worklog")
-      .option(
-        "-s, --started <datetime>",
-        "Start time in ISO 8601 format (e.g., 2024-01-15T09:00:00)"
-      )
-      .action(async function (this: Command, issueKey: string, opts) {
+const addWorklogCommand = new Command("add")
+  .description("Add a worklog entry to an issue")
+  .argument("<issueKey>", "Issue key (e.g., PROJ-123)")
+  .option("-t, --time <duration>", "Time spent (e.g., 2h, 30m, 1d, 1w)")
+  .option("-c, --comment <text>", "Comment or description for the worklog")
+  .option(
+    "-s, --started <datetime>",
+    "Start time in ISO 8601 format (e.g., 2024-01-15T09:00:00)"
+  );
+
+addGlobalOptionsHelp(addWorklogCommand);
+
+addWorklogCommand.action(async function (this: Command, issueKey: string, opts) {
         const parent = this.parent?.parent?.parent;
         const globalOpts = parent?.opts() ?? {};
         const format = (globalOpts["output"] as OutputFormat) ?? "table";
@@ -130,5 +131,8 @@ export const worklogCommand = new Command("worklog")
           outputError(err instanceof Error ? err : String(err), format);
           throw err;
         }
-      })
-  );
+      });
+
+export const worklogCommand = new Command("worklog")
+  .description("Manage issue worklogs")
+  .addCommand(addWorklogCommand);

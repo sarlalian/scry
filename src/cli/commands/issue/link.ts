@@ -7,6 +7,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { IssueLinkType } from "../../../api/types/issue.ts";
 import { success, error, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface LinkResult {
   success: boolean;
@@ -56,8 +57,11 @@ export const linkCommand = new Command("link")
   .argument("<source-key>", "Source issue key (e.g., PROJ-123)")
   .argument("<target-key>", "Target issue key (e.g., PROJ-456)")
   .option("-t, --type <link-type>", "Link type (e.g., Blocks, Relates, Duplicates)")
-  .option("--dry-run", "Preview what would be linked without making changes")
-  .action(async function (this: Command, sourceKey: string, targetKey: string) {
+  .option("--dry-run", "Preview what would be linked without making changes");
+
+addGlobalOptionsHelp(linkCommand);
+
+linkCommand.action(async function (this: Command, sourceKey: string, targetKey: string) {
     const opts = this.opts<{ type?: string; dryRun?: boolean }>();
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};

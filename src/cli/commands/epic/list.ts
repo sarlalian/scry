@@ -12,6 +12,7 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { Issue } from "../../../api/types/issue.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 const EPIC_COLUMNS: TableColumn[] = [
   { key: "key", header: "Key", width: 12 },
@@ -57,8 +58,11 @@ export const listCommand = new Command("list")
   .option("--reverse", "Reverse sort order (ASC)")
   .option("--limit <n>", "Maximum results", "50")
   .option("--start-at <n>", "Start at result number", "0")
-  .option("--columns <cols>", "Columns to display (comma-separated)")
-  .action(async function (this: Command, opts) {
+  .option("--columns <cols>", "Columns to display (comma-separated)");
+
+addGlobalOptionsHelp(listCommand);
+
+listCommand.action(async function (this: Command, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

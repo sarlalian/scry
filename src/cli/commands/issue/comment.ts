@@ -8,6 +8,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { Comment } from "../../../api/types/issue.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 import { success } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function formatComment(comment: Comment, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
@@ -22,16 +23,16 @@ function formatComment(comment: Comment, format: OutputFormat): string {
   return "";
 }
 
-export const commentCommand = new Command("comment")
-  .description("Manage issue comments")
-  .addCommand(
-    new Command("add")
-      .description("Add a comment to an issue")
-      .argument("<issueKey>", "Issue key (e.g., PROJ-123)")
-      .argument("[body]", "Comment body text")
-      .option("-b, --body <text>", "Comment body (alternative to argument)")
-      .option("-e, --editor", "Open editor for comment body")
-      .action(async function (this: Command, issueKey: string, bodyArg: string | undefined, opts) {
+const addCommentCommand = new Command("add")
+  .description("Add a comment to an issue")
+  .argument("<issueKey>", "Issue key (e.g., PROJ-123)")
+  .argument("[body]", "Comment body text")
+  .option("-b, --body <text>", "Comment body (alternative to argument)")
+  .option("-e, --editor", "Open editor for comment body");
+
+addGlobalOptionsHelp(addCommentCommand);
+
+addCommentCommand.action(async function (this: Command, issueKey: string, bodyArg: string | undefined, opts) {
         const parent = this.parent?.parent?.parent;
         const globalOpts = parent?.opts() ?? {};
         const format = (globalOpts["output"] as OutputFormat) ?? "table";
@@ -102,5 +103,8 @@ export const commentCommand = new Command("comment")
           outputError(err instanceof Error ? err : String(err), format);
           throw err;
         }
-      })
-  );
+      });
+
+export const commentCommand = new Command("comment")
+  .description("Manage issue comments")
+  .addCommand(addCommentCommand);

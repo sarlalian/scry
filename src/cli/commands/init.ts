@@ -10,11 +10,15 @@ import {
 import { JiraClient } from "../../api/client.ts";
 import { UserEndpoint } from "../../api/endpoints/user.ts";
 import { success, warning } from "../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../help.ts";
 
 export const initCommand = new Command("init")
   .description("Initialize scry configuration")
-  .option("--force", "Overwrite existing configuration")
-  .action(async (opts) => {
+  .option("--force", "Overwrite existing configuration");
+
+addGlobalOptionsHelp(initCommand);
+
+initCommand.action(async (opts) => {
     const configManager = new ConfigManager();
     const configPath = getDefaultConfigPath();
 

@@ -8,6 +8,7 @@ import { ProjectEndpoint } from "../../../api/endpoints/project.ts";
 import { output, outputError, type OutputFormat } from "../../../output/index.ts";
 import type { CreateVersionRequest, Version } from "../../../api/types/version.ts";
 import { success } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function parseDate(dateStr?: string): string | undefined {
   if (!dateStr || !dateStr.trim()) return undefined;
@@ -53,8 +54,11 @@ export const createCommand = new Command("create")
   )
   .option("--released", "Mark as released")
   .option("--archived", "Mark as archived")
-  .option("-i, --interactive", "Force interactive mode even if all flags provided")
-  .action(async function (this: Command, opts) {
+  .option("-i, --interactive", "Force interactive mode even if all flags provided");
+
+addGlobalOptionsHelp(createCommand);
+
+createCommand.action(async function (this: Command, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

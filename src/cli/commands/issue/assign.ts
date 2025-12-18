@@ -8,6 +8,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { User } from "../../../api/types/user.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
 import { success, error, dryRun } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface AssignResult {
   success: boolean;
@@ -112,8 +113,11 @@ export const assignCommand = new Command("assign")
     "<assignee>",
     "Assignee (account ID, email, display name, 'me', or '-'/'none'/'unassigned' to unassign)"
   )
-  .option("--dry-run", "Preview what would be assigned without making changes")
-  .action(async function (this: Command, issueKey: string, assignee: string) {
+  .option("--dry-run", "Preview what would be assigned without making changes");
+
+addGlobalOptionsHelp(assignCommand);
+
+assignCommand.action(async function (this: Command, issueKey: string, assignee: string) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

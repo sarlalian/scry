@@ -12,6 +12,7 @@ import {
 import { outputError, type OutputFormat } from "../../output/index.ts";
 import { success } from "../../utils/messages.ts";
 import { requireValidIssueKey } from "../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../help.ts";
 
 interface OpenOptions {
   board?: string;
@@ -22,8 +23,11 @@ export const openCommand = new Command("open")
   .description("Open a Jira resource in the browser")
   .argument("[resource]", "Issue key (PROJ-123), project key (PROJ), or board/sprint ID")
   .option("-b, --board <id>", "Board ID to open")
-  .option("-s, --sprint <id>", "Sprint ID to open (requires --board)")
-  .action(async function (this: Command, resource?: string, options?: OpenOptions) {
+  .option("-s, --sprint <id>", "Sprint ID to open (requires --board)");
+
+addGlobalOptionsHelp(openCommand);
+
+openCommand.action(async function (this: Command, resource?: string, options?: OpenOptions) {
     const parent = this.parent;
     const opts = parent?.opts() ?? {};
     const format = (opts["output"] as OutputFormat) ?? "table";

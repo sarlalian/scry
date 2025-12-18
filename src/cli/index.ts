@@ -15,7 +15,7 @@ const VERSION = "0.1.0";
 
 export const cli = new Command()
   .name("scry")
-  .description("Feature-rich interactive Jira command line")
+  .description("CLI and interactive Jira command line")
   .version(VERSION, "-V, --version", "Show version")
   .option("-c, --config <path>", "Config file path")
   .option("-p, --project <key>", "Jira project key")

@@ -11,9 +11,11 @@ import { deleteCommand } from "./delete.ts";
 import { worklogCommand } from "./worklog.ts";
 import { linkCommand } from "./link.ts";
 import { unlinkCommand } from "./unlink.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
-export const issueCommand = new Command("issue")
-  .description("Manage Jira issues")
+export const issueCommand = addGlobalOptionsHelp(
+  new Command("issue").description("Manage Jira issues")
+)
   .addCommand(listCommand)
   .addCommand(viewCommand)
   .addCommand(createCommand)

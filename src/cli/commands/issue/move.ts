@@ -14,6 +14,7 @@ import {
 import type { Transition } from "../../../api/types/issue.ts";
 import { success, error, warning, dryRun } from "../../../utils/messages.ts";
 import { requireValidIssueKey } from "../../../utils/validation.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 interface TransitionTableRow {
   id: string;
@@ -47,8 +48,11 @@ export const moveCommand = new Command("move")
   .argument("<issue-key>", "Issue key (e.g., PROJ-123)")
   .argument("[target-status]", "Target status or transition name")
   .option("-i, --interactive", "Select transition interactively")
-  .option("--dry-run", "Preview what would be transitioned without making changes")
-  .action(async function (
+  .option("--dry-run", "Preview what would be transitioned without making changes");
+
+addGlobalOptionsHelp(moveCommand);
+
+moveCommand.action(async function (
     this: Command,
     issueKey: string,
     targetStatus?: string,

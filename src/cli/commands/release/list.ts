@@ -11,6 +11,7 @@ import {
   type TableColumn,
 } from "../../../output/index.ts";
 import type { Version } from "../../../api/types/version.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 const RELEASE_COLUMNS: TableColumn[] = [
   { key: "id", header: "ID", width: 8 },
@@ -49,8 +50,11 @@ export const listCommand = new Command("list")
   .option("--order-by <field>", "Sort field (e.g., name, releaseDate)")
   .option("--limit <n>", "Maximum results", "50")
   .option("--start-at <n>", "Start at result number", "0")
-  .option("--columns <cols>", "Columns to display (comma-separated)")
-  .action(async function (this: Command, projectArg: string | undefined, opts) {
+  .option("--columns <cols>", "Columns to display (comma-separated)");
+
+addGlobalOptionsHelp(listCommand);
+
+listCommand.action(async function (this: Command, projectArg: string | undefined, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";

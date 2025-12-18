@@ -8,6 +8,7 @@ import { output, outputError, type OutputFormat } from "../../../output/index.ts
 import type { CreateIssueRequest, CreatedIssue } from "../../../api/types/issue.ts";
 import { textToAdf, parseLabels, parseComponents } from "../../../utils/adf-helpers.ts";
 import { success } from "../../../utils/messages.ts";
+import { addGlobalOptionsHelp } from "../../help.ts";
 
 function formatCreatedIssue(issue: CreatedIssue, format: OutputFormat): string {
   if (format === "table" || format === "plain") {
@@ -33,8 +34,11 @@ export const createCommand = new Command("create")
   .option("-l, --labels <labels>", "Comma-separated labels")
   .option("-C, --components <components>", "Comma-separated component names")
   .option("-P, --parent <key>", "Parent issue key (for subtasks)")
-  .option("-i, --interactive", "Force interactive mode even if all flags provided")
-  .action(async function (this: Command, opts) {
+  .option("-i, --interactive", "Force interactive mode even if all flags provided");
+
+addGlobalOptionsHelp(createCommand);
+
+createCommand.action(async function (this: Command, opts) {
     const parent = this.parent?.parent;
     const globalOpts = parent?.opts() ?? {};
     const format = (globalOpts["output"] as OutputFormat) ?? "table";
