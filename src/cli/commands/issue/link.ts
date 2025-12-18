@@ -62,92 +62,92 @@ export const linkCommand = new Command("link")
 addGlobalOptionsHelp(linkCommand);
 
 linkCommand.action(async function (this: Command, sourceKey: string, targetKey: string) {
-    const opts = this.opts<{ type?: string; dryRun?: boolean }>();
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const isDryRun = opts.dryRun;
+  const opts = this.opts<{ type?: string; dryRun?: boolean }>();
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const isDryRun = opts.dryRun;
 
-    try {
-      requireValidIssueKey(sourceKey);
-      requireValidIssueKey(targetKey);
+  try {
+    requireValidIssueKey(sourceKey);
+    requireValidIssueKey(targetKey);
 
-      if (sourceKey === targetKey) {
-        throw new Error("Cannot link an issue to itself");
+    if (sourceKey === targetKey) {
+      throw new Error("Cannot link an issue to itself");
+    }
+
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
+
+    const linkTypes = await issueEndpoint.getLinkTypes();
+
+    if (!opts.type) {
+      if (format === "table" || format === "plain") {
+        console.log(formatLinkTypes(linkTypes));
+        console.log(
+          chalk.yellow(
+            "Please specify a link type using the --type option.\n" +
+              "Example: scry issue link PROJ-123 PROJ-456 --type Blocks"
+          )
+        );
+      } else {
+        output({ linkTypes }, format);
       }
+      return;
+    }
 
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
+    const linkType = findLinkType(opts.type, linkTypes);
 
-      const linkTypes = await issueEndpoint.getLinkTypes();
+    if (!linkType) {
+      throw new Error(
+        `Unknown link type: "${opts.type}". Use the command without --type to see available link types.`
+      );
+    }
 
-      if (!opts.type) {
-        if (format === "table" || format === "plain") {
-          console.log(formatLinkTypes(linkTypes));
-          console.log(
-            chalk.yellow(
-              "Please specify a link type using the --type option.\n" +
-                "Example: scry issue link PROJ-123 PROJ-456 --type Blocks"
-            )
-          );
-        } else {
-          output({ linkTypes }, format);
-        }
-        return;
-      }
-
-      const linkType = findLinkType(opts.type, linkTypes);
-
-      if (!linkType) {
-        throw new Error(
-          `Unknown link type: "${opts.type}". Use the command without --type to see available link types.`
+    if (isDryRun) {
+      if (format === "table" || format === "plain") {
+        console.log("");
+        console.log(
+          dryRun(
+            `Would link ${chalk.bold(sourceKey)} to ${chalk.bold(targetKey)} with type ${chalk.bold(linkType.name)}`
+          )
+        );
+        console.log(chalk.dim(`  Relationship: ${sourceKey} ${linkType.outward} ${targetKey}`));
+        console.log("");
+      } else {
+        output(
+          {
+            dryRun: true,
+            action: "link",
+            sourceKey,
+            targetKey,
+            linkType: linkType.name,
+          },
+          format
         );
       }
-
-      if (isDryRun) {
-        if (format === "table" || format === "plain") {
-          console.log("");
-          console.log(
-            dryRun(
-              `Would link ${chalk.bold(sourceKey)} to ${chalk.bold(targetKey)} with type ${chalk.bold(linkType.name)}`
-            )
-          );
-          console.log(chalk.dim(`  Relationship: ${sourceKey} ${linkType.outward} ${targetKey}`));
-          console.log("");
-        } else {
-          output(
-            {
-              dryRun: true,
-              action: "link",
-              sourceKey,
-              targetKey,
-              linkType: linkType.name,
-            },
-            format
-          );
-        }
-        return;
-      }
-
-      await issueEndpoint.link(sourceKey, targetKey, linkType.name);
-
-      const result: LinkResult = {
-        success: true,
-        sourceKey,
-        targetKey,
-        linkType: linkType.name,
-        message: `Successfully linked ${sourceKey} to ${targetKey} with type "${linkType.name}"`,
-      };
-
-      if (format === "table" || format === "plain") {
-        console.log(formatLinkResult(result, format));
-      } else {
-        output(result, format);
-      }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+      return;
     }
-  });
+
+    await issueEndpoint.link(sourceKey, targetKey, linkType.name);
+
+    const result: LinkResult = {
+      success: true,
+      sourceKey,
+      targetKey,
+      linkType: linkType.name,
+      message: `Successfully linked ${sourceKey} to ${targetKey} with type "${linkType.name}"`,
+    };
+
+    if (format === "table" || format === "plain") {
+      console.log(formatLinkResult(result, format));
+    } else {
+      output(result, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

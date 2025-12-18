@@ -47,90 +47,90 @@ export const listCommand = new Command("list")
 addGlobalOptionsHelp(listCommand);
 
 listCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const boardEndpoint = new BoardEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const boardEndpoint = new BoardEndpoint(client);
 
+    if (opts["type"]) {
+      const validTypes: BoardType[] = ["scrum", "kanban", "simple"];
+      const typeInput = (opts["type"] as string).toLowerCase();
+      if (!validTypes.includes(typeInput as BoardType)) {
+        throw new Error(`Type must be one of: ${validTypes.join(", ")}`);
+      }
+    }
+
+    if (globalOpts["debug"]) {
+      if (opts["name"]) {
+        console.log(chalk.dim(`Name filter: ${opts["name"]}`));
+      }
       if (opts["type"]) {
-        const validTypes: BoardType[] = ["scrum", "kanban", "simple"];
-        const typeInput = (opts["type"] as string).toLowerCase();
-        if (!validTypes.includes(typeInput as BoardType)) {
-          throw new Error(`Type must be one of: ${validTypes.join(", ")}`);
-        }
+        console.log(chalk.dim(`Type filter: ${opts["type"]}`));
       }
-
-      if (globalOpts["debug"]) {
-        if (opts["name"]) {
-          console.log(chalk.dim(`Name filter: ${opts["name"]}`));
-        }
-        if (opts["type"]) {
-          console.log(chalk.dim(`Type filter: ${opts["type"]}`));
-        }
-        if (opts["project"]) {
-          console.log(chalk.dim(`Project filter: ${opts["project"]}`));
-        }
-        console.log(chalk.dim(""));
+      if (opts["project"]) {
+        console.log(chalk.dim(`Project filter: ${opts["project"]}`));
       }
+      console.log(chalk.dim(""));
+    }
 
-      const result = await boardEndpoint.list({
-        name: opts["name"] as string | undefined,
-        type: opts["type"] ? ((opts["type"] as string).toLowerCase() as BoardType) : undefined,
-        projectKeyOrId: opts["project"] as string | undefined,
-        maxResults: parseInt(opts["limit"] as string, 10),
-        startAt: parseInt(opts["startAt"] as string, 10),
-      });
+    const result = await boardEndpoint.list({
+      name: opts["name"] as string | undefined,
+      type: opts["type"] ? ((opts["type"] as string).toLowerCase() as BoardType) : undefined,
+      projectKeyOrId: opts["project"] as string | undefined,
+      maxResults: parseInt(opts["limit"] as string, 10),
+      startAt: parseInt(opts["startAt"] as string, 10),
+    });
 
-      const formatted = formatBoardsForOutput(result.values);
+    const formatted = formatBoardsForOutput(result.values);
 
-      if (format === "table") {
-        const columns = opts["columns"]
-          ? BOARD_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
-          : BOARD_COLUMNS;
+    if (format === "table") {
+      const columns = opts["columns"]
+        ? BOARD_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
+        : BOARD_COLUMNS;
 
-        const tableFormatter = new TableFormatter(columns);
-        const outputStr = tableFormatter.format(
-          {
-            data: formatted,
-            meta: {
-              total: result.total,
-              maxResults: result.maxResults,
-              startAt: result.startAt,
-              isLast: result.isLast,
-            },
-          },
-          { colors: globalOpts["color"] !== false }
-        );
-        console.log(outputStr);
-
-        if (!result.isLast) {
-          console.log(
-            chalk.dim(
-              `\nShowing ${result.values.length} results. Use --start-at ${
-                result.startAt + result.maxResults
-              } for more`
-            )
-          );
-        } else if (result.total !== undefined && result.total > 0) {
-          console.log(chalk.dim(`\nShowing ${result.values.length} of ${result.total} boards`));
-        }
-      } else {
-        output(formatted, format, {
+      const tableFormatter = new TableFormatter(columns);
+      const outputStr = tableFormatter.format(
+        {
+          data: formatted,
           meta: {
             total: result.total,
             maxResults: result.maxResults,
             startAt: result.startAt,
             isLast: result.isLast,
           },
-        });
+        },
+        { colors: globalOpts["color"] !== false }
+      );
+      console.log(outputStr);
+
+      if (!result.isLast) {
+        console.log(
+          chalk.dim(
+            `\nShowing ${result.values.length} results. Use --start-at ${
+              result.startAt + result.maxResults
+            } for more`
+          )
+        );
+      } else if (result.total !== undefined && result.total > 0) {
+        console.log(chalk.dim(`\nShowing ${result.values.length} of ${result.total} boards`));
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+    } else {
+      output(formatted, format, {
+        meta: {
+          total: result.total,
+          maxResults: result.maxResults,
+          startAt: result.startAt,
+          isLast: result.isLast,
+        },
+      });
     }
-  });
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

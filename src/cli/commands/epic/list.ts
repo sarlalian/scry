@@ -63,94 +63,94 @@ export const listCommand = new Command("list")
 addGlobalOptionsHelp(listCommand);
 
 listCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const projectKey = globalOpts["project"] as string | undefined;
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const projectKey = globalOpts["project"] as string | undefined;
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-      let jql: string;
+    let jql: string;
 
-      if (opts["jql"]) {
-        jql = opts["jql"] as string;
-      } else {
-        const builder = new JqlBuilder();
-        const project = projectKey ?? config.project.key;
+    if (opts["jql"]) {
+      jql = opts["jql"] as string;
+    } else {
+      const builder = new JqlBuilder();
+      const project = projectKey ?? config.project.key;
 
-        if (project) {
-          builder.project(project);
-        }
-
-        builder.type("Epic");
-
-        if (opts["assignee"]) {
-          builder.assignee(opts["assignee"] as string);
-        }
-
-        if (opts["status"]) {
-          builder.status(opts["status"] as string);
-        }
-
-        if (opts["label"] && (opts["label"] as string[]).length > 0) {
-          builder.labels(opts["label"] as string[]);
-        }
-
-        if (opts["created"]) {
-          builder.created(opts["created"] as string);
-        }
-
-        if (opts["updated"]) {
-          builder.updated(opts["updated"] as string);
-        }
-
-        const orderDirection = opts["reverse"] ? "ASC" : "DESC";
-        builder.orderBy(opts["orderBy"] as string, orderDirection);
-
-        jql = builder.build();
+      if (project) {
+        builder.project(project);
       }
 
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim(`JQL: ${jql}\n`));
+      builder.type("Epic");
+
+      if (opts["assignee"]) {
+        builder.assignee(opts["assignee"] as string);
       }
 
-      const result = await issueEndpoint.search(jql, {
-        maxResults: parseInt(opts["limit"] as string, 10),
-        startAt: parseInt(opts["startAt"] as string, 10),
-      });
-
-      const formatted = formatEpicsForOutput(result.issues);
-
-      if (format === "table") {
-        const columns = opts["columns"]
-          ? EPIC_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
-          : EPIC_COLUMNS;
-
-        const tableFormatter = new TableFormatter(columns);
-        const outputStr = tableFormatter.format(
-          { data: formatted, meta: { total: result.total, maxResults: result.maxResults } },
-          { colors: globalOpts["color"] !== false }
-        );
-        console.log(outputStr);
-
-        if (result.total && result.total > result.maxResults) {
-          console.log(chalk.dim(`\nShowing ${result.issues.length} of ${result.total} epics`));
-        }
-      } else {
-        output(formatted, format, {
-          meta: {
-            total: result.total,
-            maxResults: result.maxResults,
-            startAt: result.startAt,
-          },
-        });
+      if (opts["status"]) {
+        builder.status(opts["status"] as string);
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+
+      if (opts["label"] && (opts["label"] as string[]).length > 0) {
+        builder.labels(opts["label"] as string[]);
+      }
+
+      if (opts["created"]) {
+        builder.created(opts["created"] as string);
+      }
+
+      if (opts["updated"]) {
+        builder.updated(opts["updated"] as string);
+      }
+
+      const orderDirection = opts["reverse"] ? "ASC" : "DESC";
+      builder.orderBy(opts["orderBy"] as string, orderDirection);
+
+      jql = builder.build();
     }
-  });
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`JQL: ${jql}\n`));
+    }
+
+    const result = await issueEndpoint.search(jql, {
+      maxResults: parseInt(opts["limit"] as string, 10),
+      startAt: parseInt(opts["startAt"] as string, 10),
+    });
+
+    const formatted = formatEpicsForOutput(result.issues);
+
+    if (format === "table") {
+      const columns = opts["columns"]
+        ? EPIC_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
+        : EPIC_COLUMNS;
+
+      const tableFormatter = new TableFormatter(columns);
+      const outputStr = tableFormatter.format(
+        { data: formatted, meta: { total: result.total, maxResults: result.maxResults } },
+        { colors: globalOpts["color"] !== false }
+      );
+      console.log(outputStr);
+
+      if (result.total && result.total > result.maxResults) {
+        console.log(chalk.dim(`\nShowing ${result.issues.length} of ${result.total} epics`));
+      }
+    } else {
+      output(formatted, format, {
+        meta: {
+          total: result.total,
+          maxResults: result.maxResults,
+          startAt: result.startAt,
+        },
+      });
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

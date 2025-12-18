@@ -61,60 +61,60 @@ export const removeCommand = new Command("remove")
 addGlobalOptionsHelp(removeCommand);
 
 removeCommand.action(async function (this: Command, epicKey: string, issueKeys: string[]) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      requireValidIssueKey(epicKey);
-      requireValidIssueKeys(issueKeys);
+  try {
+    requireValidIssueKey(epicKey);
+    requireValidIssueKeys(issueKeys);
 
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-      const results: Array<{
-        issueKey: string;
-        success: boolean;
-        error: string | null;
-      }> = [];
+    const results: Array<{
+      issueKey: string;
+      success: boolean;
+      error: string | null;
+    }> = [];
 
-      for (const issueKey of issueKeys) {
-        try {
-          await issueEndpoint.update(issueKey, { parent: null });
-          results.push({
-            issueKey,
-            success: true,
-            error: null,
-          });
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          results.push({
-            issueKey,
-            success: false,
-            error: errorMessage,
-          });
-        }
+    for (const issueKey of issueKeys) {
+      try {
+        await issueEndpoint.update(issueKey, { parent: null });
+        results.push({
+          issueKey,
+          success: true,
+          error: null,
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        results.push({
+          issueKey,
+          success: false,
+          error: errorMessage,
+        });
       }
-
-      const result: RemoveResult = {
-        epicKey,
-        results,
-      };
-
-      if (format === "table" || format === "plain") {
-        console.log(formatRemoveResult(result, format));
-      } else {
-        output(result, format);
-      }
-
-      const hasFailures = results.some((r) => !r.success);
-      if (hasFailures) {
-        throw new Error("Failed to remove one or more issues from epic");
-      }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
     }
-  });
+
+    const result: RemoveResult = {
+      epicKey,
+      results,
+    };
+
+    if (format === "table" || format === "plain") {
+      console.log(formatRemoveResult(result, format));
+    } else {
+      output(result, format);
+    }
+
+    const hasFailures = results.some((r) => !r.success);
+    if (hasFailures) {
+      throw new Error("Failed to remove one or more issues from epic");
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

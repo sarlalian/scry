@@ -55,66 +55,66 @@ export const listCommand = new Command("list")
 addGlobalOptionsHelp(listCommand);
 
 listCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const projectEndpoint = new ProjectEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const projectEndpoint = new ProjectEndpoint(client);
 
-      if (globalOpts["debug"]) {
-        if (opts["name"]) {
-          console.log(chalk.dim(`Name filter: ${opts["name"]}`));
-        }
-        console.log(chalk.dim(`Order by: ${opts["orderBy"]}\n`));
+    if (globalOpts["debug"]) {
+      if (opts["name"]) {
+        console.log(chalk.dim(`Name filter: ${opts["name"]}`));
       }
+      console.log(chalk.dim(`Order by: ${opts["orderBy"]}\n`));
+    }
 
-      const result = await projectEndpoint.list({
-        query: opts["name"] as string | undefined,
-        orderBy: opts["orderBy"] as string,
-        maxResults: parseInt(opts["limit"] as string, 10),
-        startAt: parseInt(opts["startAt"] as string, 10),
-      });
+    const result = await projectEndpoint.list({
+      query: opts["name"] as string | undefined,
+      orderBy: opts["orderBy"] as string,
+      maxResults: parseInt(opts["limit"] as string, 10),
+      startAt: parseInt(opts["startAt"] as string, 10),
+    });
 
-      const formatted = formatProjectsForOutput(result.values);
+    const formatted = formatProjectsForOutput(result.values);
 
-      if (format === "table") {
-        const columns = opts["columns"]
-          ? PROJECT_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
-          : PROJECT_COLUMNS;
+    if (format === "table") {
+      const columns = opts["columns"]
+        ? PROJECT_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
+        : PROJECT_COLUMNS;
 
-        const tableFormatter = new TableFormatter(columns);
-        const outputStr = tableFormatter.format(
-          {
-            data: formatted,
-            meta: {
-              total: result.total,
-              maxResults: result.maxResults,
-              startAt: result.startAt,
-            },
-          },
-          { colors: globalOpts["color"] !== false }
-        );
-        console.log(outputStr);
-
-        if (result.total > result.maxResults) {
-          console.log(chalk.dim(`\nShowing ${result.values.length} of ${result.total} projects`));
-        }
-      } else {
-        output(formatted, format, {
+      const tableFormatter = new TableFormatter(columns);
+      const outputStr = tableFormatter.format(
+        {
+          data: formatted,
           meta: {
             total: result.total,
             maxResults: result.maxResults,
             startAt: result.startAt,
-            isLast: result.isLast,
           },
-        });
+        },
+        { colors: globalOpts["color"] !== false }
+      );
+      console.log(outputStr);
+
+      if (result.total > result.maxResults) {
+        console.log(chalk.dim(`\nShowing ${result.values.length} of ${result.total} projects`));
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+    } else {
+      output(formatted, format, {
+        meta: {
+          total: result.total,
+          maxResults: result.maxResults,
+          startAt: result.startAt,
+          isLast: result.isLast,
+        },
+      });
     }
-  });
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

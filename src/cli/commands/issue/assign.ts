@@ -118,69 +118,69 @@ export const assignCommand = new Command("assign")
 addGlobalOptionsHelp(assignCommand);
 
 assignCommand.action(async function (this: Command, issueKey: string, assignee: string) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const opts = this.opts();
-    const isDryRun = opts["dryRun"] as boolean | undefined;
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const opts = this.opts();
+  const isDryRun = opts["dryRun"] as boolean | undefined;
 
-    try {
-      requireValidIssueKey(issueKey);
+  try {
+    requireValidIssueKey(issueKey);
 
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
-      const userEndpoint = new UserEndpoint(client);
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
+    const userEndpoint = new UserEndpoint(client);
 
-      const resolved = await resolveAssignee(assignee, userEndpoint);
+    const resolved = await resolveAssignee(assignee, userEndpoint);
 
-      if (isDryRun) {
-        if (format === "table" || format === "plain") {
-          console.log("");
-          if (resolved.accountId === null) {
-            console.log(dryRun(`Would unassign issue ${chalk.bold(issueKey)}`));
-          } else {
-            console.log(
-              dryRun(
-                `Would assign issue ${chalk.bold(issueKey)} to ${chalk.bold(resolved.displayName ?? resolved.accountId)}`
-              )
-            );
-          }
-          console.log("");
+    if (isDryRun) {
+      if (format === "table" || format === "plain") {
+        console.log("");
+        if (resolved.accountId === null) {
+          console.log(dryRun(`Would unassign issue ${chalk.bold(issueKey)}`));
         } else {
-          output(
-            {
-              dryRun: true,
-              issueKey,
-              action: "assign",
-              assignee: resolved,
-            },
-            format
+          console.log(
+            dryRun(
+              `Would assign issue ${chalk.bold(issueKey)} to ${chalk.bold(resolved.displayName ?? resolved.accountId)}`
+            )
           );
         }
-        return;
-      }
-
-      await issueEndpoint.assign(issueKey, resolved.accountId);
-
-      const result: AssignResult = {
-        success: true,
-        issueKey,
-        assignee: resolved,
-        message:
-          resolved.accountId === null
-            ? `Issue ${issueKey} has been unassigned`
-            : `Issue ${issueKey} has been assigned to ${resolved.displayName ?? resolved.accountId}`,
-      };
-
-      if (format === "table" || format === "plain") {
-        console.log(formatAssignResult(result, format));
+        console.log("");
       } else {
-        output(result, format);
+        output(
+          {
+            dryRun: true,
+            issueKey,
+            action: "assign",
+            assignee: resolved,
+          },
+          format
+        );
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+      return;
     }
-  });
+
+    await issueEndpoint.assign(issueKey, resolved.accountId);
+
+    const result: AssignResult = {
+      success: true,
+      issueKey,
+      assignee: resolved,
+      message:
+        resolved.accountId === null
+          ? `Issue ${issueKey} has been unassigned`
+          : `Issue ${issueKey} has been assigned to ${resolved.displayName ?? resolved.accountId}`,
+    };
+
+    if (format === "table" || format === "plain") {
+      console.log(formatAssignResult(result, format));
+    } else {
+      output(result, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

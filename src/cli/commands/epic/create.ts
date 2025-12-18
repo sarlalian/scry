@@ -37,153 +37,153 @@ export const createCommand = new Command("create")
 addGlobalOptionsHelp(createCommand);
 
 createCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const projectKeyGlobal = globalOpts["project"] as string | undefined;
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const projectKeyGlobal = globalOpts["project"] as string | undefined;
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-      let projectKey = opts["project"] as string | undefined;
-      let summary = opts["summary"] as string | undefined;
-      let description = opts["description"] as string | undefined;
-      let assignee = opts["assignee"] as string | undefined;
-      let priority = opts["priority"] as string | undefined;
-      let labels = opts["labels"] as string | undefined;
+    let projectKey = opts["project"] as string | undefined;
+    let summary = opts["summary"] as string | undefined;
+    let description = opts["description"] as string | undefined;
+    let assignee = opts["assignee"] as string | undefined;
+    let priority = opts["priority"] as string | undefined;
+    let labels = opts["labels"] as string | undefined;
 
-      const needsInteractive = opts["interactive"] || !projectKey || !summary;
+    const needsInteractive = opts["interactive"] || !projectKey || !summary;
 
-      if (needsInteractive) {
-        if (format === "table" || format === "plain") {
-          console.log(chalk.cyan("\nCreate a new Jira epic\n"));
-        }
-
-        if (!projectKey) {
-          projectKey = await input({
-            message: "Project key:",
-            default: projectKeyGlobal ?? config.project?.key ?? "",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Project key is required";
-              }
-              return true;
-            },
-          });
-        }
-
-        if (!summary) {
-          summary = await input({
-            message: "Epic name:",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Epic name is required";
-              }
-              return true;
-            },
-          });
-        }
-
-        if (!description) {
-          const shouldAddDescription = await input({
-            message: "Description (press Enter to skip, or type text):",
-          });
-
-          if (shouldAddDescription.trim()) {
-            description = shouldAddDescription;
-          } else {
-            const useEditor = await input({
-              message: "Open editor for longer description? (y/N):",
-            });
-
-            if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
-              description = await editor({
-                message: "Enter epic description:",
-              });
-            }
-          }
-        }
-
-        if (!priority) {
-          const shouldAddPriority = await input({
-            message: "Priority (press Enter to skip, or enter priority name):",
-          });
-
-          if (shouldAddPriority.trim()) {
-            priority = shouldAddPriority;
-          }
-        }
-
-        if (!assignee) {
-          const shouldAddAssignee = await input({
-            message: "Assignee account ID (press Enter to skip):",
-          });
-
-          if (shouldAddAssignee.trim()) {
-            assignee = shouldAddAssignee;
-          }
-        }
-
-        if (!labels) {
-          const shouldAddLabels = await input({
-            message: "Labels (comma-separated, press Enter to skip):",
-          });
-
-          if (shouldAddLabels.trim()) {
-            labels = shouldAddLabels;
-          }
-        }
-      } else {
-        projectKey = projectKey || projectKeyGlobal || config.project?.key;
-        if (!projectKey) {
-          throw new Error("Project key is required. Use --project flag or set default project.");
-        }
-      }
-
-      if (!projectKey || !summary) {
-        throw new Error("Missing required fields: project and summary are required");
-      }
-
-      const fields: CreateIssueRequest = {
-        project: { key: projectKey },
-        issuetype: { name: "Epic" },
-        summary,
-      };
-
-      if (description && description.trim()) {
-        fields.description = textToAdf(description);
-      }
-
-      if (assignee) {
-        fields.assignee = { accountId: assignee };
-      }
-
-      if (priority) {
-        fields.priority = { name: priority };
-      }
-
-      if (labels) {
-        fields.labels = parseLabels(labels);
-      }
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim("\nCreating epic with fields:"));
-        console.log(chalk.dim(JSON.stringify(fields, null, 2)));
-        console.log("");
-      }
-
-      const createdEpic = await issueEndpoint.create(fields);
-
+    if (needsInteractive) {
       if (format === "table" || format === "plain") {
-        console.log(formatCreatedEpic(createdEpic, format));
-      } else {
-        output(createdEpic, format);
+        console.log(chalk.cyan("\nCreate a new Jira epic\n"));
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+
+      if (!projectKey) {
+        projectKey = await input({
+          message: "Project key:",
+          default: projectKeyGlobal ?? config.project?.key ?? "",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Project key is required";
+            }
+            return true;
+          },
+        });
+      }
+
+      if (!summary) {
+        summary = await input({
+          message: "Epic name:",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Epic name is required";
+            }
+            return true;
+          },
+        });
+      }
+
+      if (!description) {
+        const shouldAddDescription = await input({
+          message: "Description (press Enter to skip, or type text):",
+        });
+
+        if (shouldAddDescription.trim()) {
+          description = shouldAddDescription;
+        } else {
+          const useEditor = await input({
+            message: "Open editor for longer description? (y/N):",
+          });
+
+          if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
+            description = await editor({
+              message: "Enter epic description:",
+            });
+          }
+        }
+      }
+
+      if (!priority) {
+        const shouldAddPriority = await input({
+          message: "Priority (press Enter to skip, or enter priority name):",
+        });
+
+        if (shouldAddPriority.trim()) {
+          priority = shouldAddPriority;
+        }
+      }
+
+      if (!assignee) {
+        const shouldAddAssignee = await input({
+          message: "Assignee account ID (press Enter to skip):",
+        });
+
+        if (shouldAddAssignee.trim()) {
+          assignee = shouldAddAssignee;
+        }
+      }
+
+      if (!labels) {
+        const shouldAddLabels = await input({
+          message: "Labels (comma-separated, press Enter to skip):",
+        });
+
+        if (shouldAddLabels.trim()) {
+          labels = shouldAddLabels;
+        }
+      }
+    } else {
+      projectKey = projectKey || projectKeyGlobal || config.project?.key;
+      if (!projectKey) {
+        throw new Error("Project key is required. Use --project flag or set default project.");
+      }
     }
-  });
+
+    if (!projectKey || !summary) {
+      throw new Error("Missing required fields: project and summary are required");
+    }
+
+    const fields: CreateIssueRequest = {
+      project: { key: projectKey },
+      issuetype: { name: "Epic" },
+      summary,
+    };
+
+    if (description && description.trim()) {
+      fields.description = textToAdf(description);
+    }
+
+    if (assignee) {
+      fields.assignee = { accountId: assignee };
+    }
+
+    if (priority) {
+      fields.priority = { name: priority };
+    }
+
+    if (labels) {
+      fields.labels = parseLabels(labels);
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim("\nCreating epic with fields:"));
+      console.log(chalk.dim(JSON.stringify(fields, null, 2)));
+      console.log("");
+    }
+
+    const createdEpic = await issueEndpoint.create(fields);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatCreatedEpic(createdEpic, format));
+    } else {
+      output(createdEpic, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

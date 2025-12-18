@@ -51,150 +51,150 @@ export const createCommand = new Command("create")
 addGlobalOptionsHelp(createCommand);
 
 createCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const sprintEndpoint = new SprintEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const sprintEndpoint = new SprintEndpoint(client);
 
-      let boardId: number | undefined;
-      let name = opts["name"] as string | undefined;
-      let startDate = opts["startDate"] as string | undefined;
-      let endDate = opts["endDate"] as string | undefined;
-      let goal = opts["goal"] as string | undefined;
+    let boardId: number | undefined;
+    let name = opts["name"] as string | undefined;
+    let startDate = opts["startDate"] as string | undefined;
+    let endDate = opts["endDate"] as string | undefined;
+    let goal = opts["goal"] as string | undefined;
 
-      if (opts["boardId"]) {
-        const parsed = parseInt(opts["boardId"] as string, 10);
-        if (isNaN(parsed)) {
-          throw new Error("Board ID must be a number");
-        }
-        boardId = parsed;
-      } else if (config.board?.id) {
-        boardId = config.board.id;
+    if (opts["boardId"]) {
+      const parsed = parseInt(opts["boardId"] as string, 10);
+      if (isNaN(parsed)) {
+        throw new Error("Board ID must be a number");
       }
-
-      const needsInteractive = opts["interactive"] || !boardId || !name;
-
-      if (needsInteractive) {
-        if (format === "table" || format === "plain") {
-          console.log(chalk.cyan("\nCreate a new sprint\n"));
-        }
-
-        if (!boardId) {
-          const boardIdStr = await input({
-            message: "Board ID:",
-            default: config.board?.id?.toString() ?? "",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Board ID is required";
-              }
-              const parsed = parseInt(value, 10);
-              if (isNaN(parsed)) {
-                return "Board ID must be a number";
-              }
-              return true;
-            },
-          });
-          boardId = parseInt(boardIdStr, 10);
-        }
-
-        if (!name) {
-          name = await input({
-            message: "Sprint name:",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Sprint name is required";
-              }
-              return true;
-            },
-          });
-        }
-
-        if (!startDate) {
-          const shouldAddStartDate = await input({
-            message: "Start date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
-          });
-
-          if (shouldAddStartDate.trim()) {
-            startDate = shouldAddStartDate;
-          }
-        }
-
-        if (!endDate) {
-          const shouldAddEndDate = await input({
-            message: "End date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
-          });
-
-          if (shouldAddEndDate.trim()) {
-            endDate = shouldAddEndDate;
-          }
-        }
-
-        if (!goal) {
-          const shouldAddGoal = await input({
-            message: "Sprint goal (press Enter to skip, or type text):",
-          });
-
-          if (shouldAddGoal.trim()) {
-            goal = shouldAddGoal;
-          } else {
-            const useEditor = await input({
-              message: "Open editor for longer goal? (y/N):",
-            });
-
-            if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
-              goal = await editor({
-                message: "Enter sprint goal:",
-              });
-            }
-          }
-        }
-      } else {
-        if (!boardId) {
-          throw new Error("Board ID is required. Use --board-id flag or configure default board.");
-        }
-      }
-
-      if (!boardId || !name) {
-        throw new Error("Missing required fields: board ID and name are required");
-      }
-
-      const request: CreateSprintRequest = {
-        name,
-        originBoardId: boardId,
-      };
-
-      if (startDate && startDate.trim()) {
-        request.startDate = parseDate(startDate);
-      }
-
-      if (endDate && endDate.trim()) {
-        request.endDate = parseDate(endDate);
-      }
-
-      if (goal && goal.trim()) {
-        request.goal = goal;
-      }
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim("\nCreating sprint with request:"));
-        console.log(chalk.dim(JSON.stringify(request, null, 2)));
-        console.log("");
-      }
-
-      const createdSprint = await sprintEndpoint.create(request);
-
-      if (format === "table" || format === "plain") {
-        console.log(formatCreatedSprint(createdSprint, format));
-      } else {
-        output(createdSprint, format);
-      }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+      boardId = parsed;
+    } else if (config.board?.id) {
+      boardId = config.board.id;
     }
-  });
+
+    const needsInteractive = opts["interactive"] || !boardId || !name;
+
+    if (needsInteractive) {
+      if (format === "table" || format === "plain") {
+        console.log(chalk.cyan("\nCreate a new sprint\n"));
+      }
+
+      if (!boardId) {
+        const boardIdStr = await input({
+          message: "Board ID:",
+          default: config.board?.id?.toString() ?? "",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Board ID is required";
+            }
+            const parsed = parseInt(value, 10);
+            if (isNaN(parsed)) {
+              return "Board ID must be a number";
+            }
+            return true;
+          },
+        });
+        boardId = parseInt(boardIdStr, 10);
+      }
+
+      if (!name) {
+        name = await input({
+          message: "Sprint name:",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Sprint name is required";
+            }
+            return true;
+          },
+        });
+      }
+
+      if (!startDate) {
+        const shouldAddStartDate = await input({
+          message: "Start date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
+        });
+
+        if (shouldAddStartDate.trim()) {
+          startDate = shouldAddStartDate;
+        }
+      }
+
+      if (!endDate) {
+        const shouldAddEndDate = await input({
+          message: "End date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
+        });
+
+        if (shouldAddEndDate.trim()) {
+          endDate = shouldAddEndDate;
+        }
+      }
+
+      if (!goal) {
+        const shouldAddGoal = await input({
+          message: "Sprint goal (press Enter to skip, or type text):",
+        });
+
+        if (shouldAddGoal.trim()) {
+          goal = shouldAddGoal;
+        } else {
+          const useEditor = await input({
+            message: "Open editor for longer goal? (y/N):",
+          });
+
+          if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
+            goal = await editor({
+              message: "Enter sprint goal:",
+            });
+          }
+        }
+      }
+    } else {
+      if (!boardId) {
+        throw new Error("Board ID is required. Use --board-id flag or configure default board.");
+      }
+    }
+
+    if (!boardId || !name) {
+      throw new Error("Missing required fields: board ID and name are required");
+    }
+
+    const request: CreateSprintRequest = {
+      name,
+      originBoardId: boardId,
+    };
+
+    if (startDate && startDate.trim()) {
+      request.startDate = parseDate(startDate);
+    }
+
+    if (endDate && endDate.trim()) {
+      request.endDate = parseDate(endDate);
+    }
+
+    if (goal && goal.trim()) {
+      request.goal = goal;
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim("\nCreating sprint with request:"));
+      console.log(chalk.dim(JSON.stringify(request, null, 2)));
+      console.log("");
+    }
+
+    const createdSprint = await sprintEndpoint.create(request);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatCreatedSprint(createdSprint, format));
+    } else {
+      output(createdSprint, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

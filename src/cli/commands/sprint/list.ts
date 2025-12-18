@@ -55,94 +55,92 @@ export const listCommand = new Command("list")
 addGlobalOptionsHelp(listCommand);
 
 listCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const sprintEndpoint = new SprintEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const sprintEndpoint = new SprintEndpoint(client);
 
-      let boardId: number;
-      if (opts["boardId"]) {
-        const parsed = parseInt(opts["boardId"] as string, 10);
-        if (isNaN(parsed)) {
-          throw new Error("Board ID must be a number");
-        }
-        boardId = parsed;
-      } else if (config.board.id) {
-        boardId = config.board.id;
-      } else {
-        throw new Error(
-          "Board ID is required. Use --board-id or configure default board in config"
-        );
+    let boardId: number;
+    if (opts["boardId"]) {
+      const parsed = parseInt(opts["boardId"] as string, 10);
+      if (isNaN(parsed)) {
+        throw new Error("Board ID must be a number");
       }
+      boardId = parsed;
+    } else if (config.board.id) {
+      boardId = config.board.id;
+    } else {
+      throw new Error("Board ID is required. Use --board-id or configure default board in config");
+    }
 
+    if (opts["state"]) {
+      const validStates: SprintState[] = ["active", "closed", "future"];
+      if (!validStates.includes(opts["state"] as SprintState)) {
+        throw new Error(`State must be one of: ${validStates.join(", ")}`);
+      }
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`Board ID: ${boardId}`));
       if (opts["state"]) {
-        const validStates: SprintState[] = ["active", "closed", "future"];
-        if (!validStates.includes(opts["state"] as SprintState)) {
-          throw new Error(`State must be one of: ${validStates.join(", ")}`);
-        }
-      }
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim(`Board ID: ${boardId}`));
-        if (opts["state"]) {
-          console.log(chalk.dim(`State filter: ${opts["state"]}\n`));
-        } else {
-          console.log(chalk.dim("State filter: all\n"));
-        }
-      }
-
-      const result = await sprintEndpoint.list(boardId, {
-        state: opts["state"] as SprintState | undefined,
-        startAt: parseInt(opts["startAt"] as string, 10),
-        maxResults: parseInt(opts["limit"] as string, 10),
-      });
-
-      const formatted = formatSprintsForOutput(result.values);
-
-      if (format === "table") {
-        const columns = opts["columns"]
-          ? SPRINT_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
-          : SPRINT_COLUMNS;
-
-        const tableFormatter = new TableFormatter(columns);
-        const outputStr = tableFormatter.format(
-          {
-            data: formatted,
-            meta: {
-              maxResults: result.maxResults,
-              startAt: result.startAt,
-              isLast: result.isLast,
-            },
-          },
-          { colors: globalOpts["color"] !== false }
-        );
-        console.log(outputStr);
-
-        if (!result.isLast) {
-          console.log(
-            chalk.dim(
-              `\nShowing ${result.values.length} results. Use --start-at ${
-                result.startAt + result.maxResults
-              } for more`
-            )
-          );
-        }
+        console.log(chalk.dim(`State filter: ${opts["state"]}\n`));
       } else {
-        output(formatted, format, {
+        console.log(chalk.dim("State filter: all\n"));
+      }
+    }
+
+    const result = await sprintEndpoint.list(boardId, {
+      state: opts["state"] as SprintState | undefined,
+      startAt: parseInt(opts["startAt"] as string, 10),
+      maxResults: parseInt(opts["limit"] as string, 10),
+    });
+
+    const formatted = formatSprintsForOutput(result.values);
+
+    if (format === "table") {
+      const columns = opts["columns"]
+        ? SPRINT_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
+        : SPRINT_COLUMNS;
+
+      const tableFormatter = new TableFormatter(columns);
+      const outputStr = tableFormatter.format(
+        {
+          data: formatted,
           meta: {
             maxResults: result.maxResults,
             startAt: result.startAt,
             isLast: result.isLast,
           },
-        });
+        },
+        { colors: globalOpts["color"] !== false }
+      );
+      console.log(outputStr);
+
+      if (!result.isLast) {
+        console.log(
+          chalk.dim(
+            `\nShowing ${result.values.length} results. Use --start-at ${
+              result.startAt + result.maxResults
+            } for more`
+          )
+        );
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+    } else {
+      output(formatted, format, {
+        meta: {
+          maxResults: result.maxResults,
+          startAt: result.startAt,
+          isLast: result.isLast,
+        },
+      });
     }
-  });
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

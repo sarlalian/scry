@@ -27,48 +27,48 @@ export const addCommand = new Command("add")
 addGlobalOptionsHelp(addCommand);
 
 addCommand.action(async function (this: Command, sprintIdStr: string, issueKeys: string[]) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const sprintId = parseInt(sprintIdStr, 10);
-      if (isNaN(sprintId)) {
-        throw new Error("Sprint ID must be a number");
-      }
-
-      if (issueKeys.length === 0) {
-        throw new Error("At least one issue key is required");
-      }
-
-      requireValidIssueKeys(issueKeys);
-
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const sprintEndpoint = new SprintEndpoint(client);
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim(`Sprint ID: ${sprintId}`));
-        console.log(chalk.dim(`Issue keys: ${issueKeys.join(", ")}\n`));
-      }
-
-      await sprintEndpoint.addIssues(sprintId, issueKeys);
-
-      if (format === "table" || format === "plain") {
-        console.log(formatSuccessMessage(sprintId, issueKeys));
-      } else {
-        output(
-          {
-            sprintId,
-            issuesAdded: issueKeys.length,
-            issueKeys,
-          },
-          format
-        );
-      }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+  try {
+    const sprintId = parseInt(sprintIdStr, 10);
+    if (isNaN(sprintId)) {
+      throw new Error("Sprint ID must be a number");
     }
-  });
+
+    if (issueKeys.length === 0) {
+      throw new Error("At least one issue key is required");
+    }
+
+    requireValidIssueKeys(issueKeys);
+
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const sprintEndpoint = new SprintEndpoint(client);
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`Sprint ID: ${sprintId}`));
+      console.log(chalk.dim(`Issue keys: ${issueKeys.join(", ")}\n`));
+    }
+
+    await sprintEndpoint.addIssues(sprintId, issueKeys);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatSuccessMessage(sprintId, issueKeys));
+    } else {
+      output(
+        {
+          sprintId,
+          issuesAdded: issueKeys.length,
+          issueKeys,
+        },
+        format
+      );
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

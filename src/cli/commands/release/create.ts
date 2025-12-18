@@ -59,168 +59,168 @@ export const createCommand = new Command("create")
 addGlobalOptionsHelp(createCommand);
 
 createCommand.action(async function (this: Command, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const projectKeyGlobal = globalOpts["project"] as string | undefined;
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const projectKeyGlobal = globalOpts["project"] as string | undefined;
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const versionEndpoint = new VersionEndpoint(client);
-      const projectEndpoint = new ProjectEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const versionEndpoint = new VersionEndpoint(client);
+    const projectEndpoint = new ProjectEndpoint(client);
 
-      let projectKey = opts["project"] as string | undefined;
-      let name = opts["name"] as string | undefined;
-      let description = opts["description"] as string | undefined;
-      let releaseDate = opts["releaseDate"] as string | undefined;
-      let startDate = opts["startDate"] as string | undefined;
-      let released = opts["released"] as boolean | undefined;
-      let archived = opts["archived"] as boolean | undefined;
+    let projectKey = opts["project"] as string | undefined;
+    let name = opts["name"] as string | undefined;
+    let description = opts["description"] as string | undefined;
+    let releaseDate = opts["releaseDate"] as string | undefined;
+    let startDate = opts["startDate"] as string | undefined;
+    let released = opts["released"] as boolean | undefined;
+    let archived = opts["archived"] as boolean | undefined;
 
-      const needsInteractive = opts["interactive"] || !projectKey || !name;
+    const needsInteractive = opts["interactive"] || !projectKey || !name;
 
-      if (needsInteractive) {
-        if (format === "table" || format === "plain") {
-          console.log(chalk.cyan("\nCreate a new release/version\n"));
-        }
-
-        if (!projectKey) {
-          projectKey = await input({
-            message: "Project key:",
-            default: projectKeyGlobal ?? config.project?.key ?? "",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Project key is required";
-              }
-              return true;
-            },
-          });
-        }
-
-        if (!name) {
-          name = await input({
-            message: "Release name:",
-            validate: (value) => {
-              if (!value.trim()) {
-                return "Release name is required";
-              }
-              return true;
-            },
-          });
-        }
-
-        if (!description) {
-          const shouldAddDescription = await input({
-            message: "Description (press Enter to skip, or type text):",
-          });
-
-          if (shouldAddDescription.trim()) {
-            description = shouldAddDescription;
-          } else {
-            const useEditor = await input({
-              message: "Open editor for longer description? (y/N):",
-            });
-
-            if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
-              description = await editor({
-                message: "Enter release description:",
-              });
-            }
-          }
-        }
-
-        if (!releaseDate) {
-          const shouldAddReleaseDate = await input({
-            message: "Release date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
-          });
-
-          if (shouldAddReleaseDate.trim()) {
-            releaseDate = shouldAddReleaseDate;
-          }
-        }
-
-        if (!startDate) {
-          const shouldAddStartDate = await input({
-            message: "Start date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
-          });
-
-          if (shouldAddStartDate.trim()) {
-            startDate = shouldAddStartDate;
-          }
-        }
-
-        if (released === undefined) {
-          released = await confirm({
-            message: "Mark as released?",
-            default: false,
-          });
-        }
-
-        if (archived === undefined) {
-          archived = await confirm({
-            message: "Mark as archived?",
-            default: false,
-          });
-        }
-      } else {
-        projectKey = projectKey || projectKeyGlobal || config.project?.key;
-        if (!projectKey) {
-          throw new Error("Project key is required. Use --project flag or set default project.");
-        }
-      }
-
-      if (!projectKey || !name) {
-        throw new Error("Missing required fields: project key and name are required");
-      }
-
-      const project = await projectEndpoint.get(projectKey);
-      const projectId = parseInt(project.id, 10);
-      if (isNaN(projectId)) {
-        throw new Error(`Invalid project ID: ${project.id}`);
-      }
-
-      const request: CreateVersionRequest = {
-        name,
-        projectId,
-      };
-
-      if (description && description.trim()) {
-        request.description = description;
-      }
-
-      if (releaseDate && releaseDate.trim()) {
-        request.releaseDate = parseDate(releaseDate);
-      }
-
-      if (startDate && startDate.trim()) {
-        request.startDate = parseDate(startDate);
-      }
-
-      if (released !== undefined) {
-        request.released = released;
-      }
-
-      if (archived !== undefined) {
-        request.archived = archived;
-      }
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim("\nCreating release with request:"));
-        console.log(chalk.dim(JSON.stringify(request, null, 2)));
-        console.log("");
-      }
-
-      const createdVersion = await versionEndpoint.create(request);
-
+    if (needsInteractive) {
       if (format === "table" || format === "plain") {
-        console.log(formatCreatedVersion(createdVersion, format));
-      } else {
-        output(createdVersion, format);
+        console.log(chalk.cyan("\nCreate a new release/version\n"));
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+
+      if (!projectKey) {
+        projectKey = await input({
+          message: "Project key:",
+          default: projectKeyGlobal ?? config.project?.key ?? "",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Project key is required";
+            }
+            return true;
+          },
+        });
+      }
+
+      if (!name) {
+        name = await input({
+          message: "Release name:",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Release name is required";
+            }
+            return true;
+          },
+        });
+      }
+
+      if (!description) {
+        const shouldAddDescription = await input({
+          message: "Description (press Enter to skip, or type text):",
+        });
+
+        if (shouldAddDescription.trim()) {
+          description = shouldAddDescription;
+        } else {
+          const useEditor = await input({
+            message: "Open editor for longer description? (y/N):",
+          });
+
+          if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
+            description = await editor({
+              message: "Enter release description:",
+            });
+          }
+        }
+      }
+
+      if (!releaseDate) {
+        const shouldAddReleaseDate = await input({
+          message: "Release date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
+        });
+
+        if (shouldAddReleaseDate.trim()) {
+          releaseDate = shouldAddReleaseDate;
+        }
+      }
+
+      if (!startDate) {
+        const shouldAddStartDate = await input({
+          message: "Start date (YYYY-MM-DD or ISO 8601, press Enter to skip):",
+        });
+
+        if (shouldAddStartDate.trim()) {
+          startDate = shouldAddStartDate;
+        }
+      }
+
+      if (released === undefined) {
+        released = await confirm({
+          message: "Mark as released?",
+          default: false,
+        });
+      }
+
+      if (archived === undefined) {
+        archived = await confirm({
+          message: "Mark as archived?",
+          default: false,
+        });
+      }
+    } else {
+      projectKey = projectKey || projectKeyGlobal || config.project?.key;
+      if (!projectKey) {
+        throw new Error("Project key is required. Use --project flag or set default project.");
+      }
     }
-  });
+
+    if (!projectKey || !name) {
+      throw new Error("Missing required fields: project key and name are required");
+    }
+
+    const project = await projectEndpoint.get(projectKey);
+    const projectId = parseInt(project.id, 10);
+    if (isNaN(projectId)) {
+      throw new Error(`Invalid project ID: ${project.id}`);
+    }
+
+    const request: CreateVersionRequest = {
+      name,
+      projectId,
+    };
+
+    if (description && description.trim()) {
+      request.description = description;
+    }
+
+    if (releaseDate && releaseDate.trim()) {
+      request.releaseDate = parseDate(releaseDate);
+    }
+
+    if (startDate && startDate.trim()) {
+      request.startDate = parseDate(startDate);
+    }
+
+    if (released !== undefined) {
+      request.released = released;
+    }
+
+    if (archived !== undefined) {
+      request.archived = archived;
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim("\nCreating release with request:"));
+      console.log(chalk.dim(JSON.stringify(request, null, 2)));
+      console.log("");
+    }
+
+    const createdVersion = await versionEndpoint.create(request);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatCreatedVersion(createdVersion, format));
+    } else {
+      output(createdVersion, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

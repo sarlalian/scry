@@ -49,89 +49,86 @@ const addWorklogCommand = new Command("add")
   .argument("<issueKey>", "Issue key (e.g., PROJ-123)")
   .option("-t, --time <duration>", "Time spent (e.g., 2h, 30m, 1d, 1w)")
   .option("-c, --comment <text>", "Comment or description for the worklog")
-  .option(
-    "-s, --started <datetime>",
-    "Start time in ISO 8601 format (e.g., 2024-01-15T09:00:00)"
-  );
+  .option("-s, --started <datetime>", "Start time in ISO 8601 format (e.g., 2024-01-15T09:00:00)");
 
 addGlobalOptionsHelp(addWorklogCommand);
 
 addWorklogCommand.action(async function (this: Command, issueKey: string, opts) {
-        const parent = this.parent?.parent?.parent;
-        const globalOpts = parent?.opts() ?? {};
-        const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-        try {
-          requireValidIssueKey(issueKey);
+  try {
+    requireValidIssueKey(issueKey);
 
-          const configManager = getConfigManager();
-          const config = configManager.load(globalOpts["config"] as string | undefined);
-          const client = new JiraClient(config);
-          const issueEndpoint = new IssueEndpoint(client);
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-          let timeSpent = opts["time"] as string | undefined;
+    let timeSpent = opts["time"] as string | undefined;
 
-          if (!timeSpent) {
-            timeSpent = await input({
-              message: "Time spent (e.g., 2h, 30m, 1d, 1w):",
-              validate: (value) => {
-                if (!value.trim()) {
-                  return "Time spent is required";
-                }
-                if (!validateTimeFormat(value.trim())) {
-                  return "Invalid time format. Use formats like: 2h, 30m, 1d, 1w, or combinations like 1d4h30m";
-                }
-                return true;
-              },
-            });
+    if (!timeSpent) {
+      timeSpent = await input({
+        message: "Time spent (e.g., 2h, 30m, 1d, 1w):",
+        validate: (value) => {
+          if (!value.trim()) {
+            return "Time spent is required";
           }
-
-          if (!timeSpent || !timeSpent.trim()) {
-            throw new Error("Time spent is required");
+          if (!validateTimeFormat(value.trim())) {
+            return "Invalid time format. Use formats like: 2h, 30m, 1d, 1w, or combinations like 1d4h30m";
           }
-
-          timeSpent = timeSpent.trim();
-
-          if (!validateTimeFormat(timeSpent)) {
-            throw new Error(
-              "Invalid time format. Use formats like: 2h, 30m, 1d, 1w, or combinations like 1d4h30m"
-            );
-          }
-
-          const worklogOptions: { comment?: string; started?: string } = {};
-
-          if (opts["comment"]) {
-            worklogOptions.comment = opts["comment"] as string;
-          }
-
-          if (opts["started"]) {
-            worklogOptions.started = opts["started"] as string;
-          }
-
-          if (globalOpts["debug"]) {
-            console.log(chalk.dim(`\nAdding worklog to issue: ${issueKey}`));
-            console.log(chalk.dim(`Time spent: ${timeSpent}`));
-            if (worklogOptions.comment) {
-              console.log(chalk.dim(`Comment: ${worklogOptions.comment}`));
-            }
-            if (worklogOptions.started) {
-              console.log(chalk.dim(`Started: ${worklogOptions.started}`));
-            }
-            console.log("");
-          }
-
-          const worklog = await issueEndpoint.addWorklog(issueKey, timeSpent, worklogOptions);
-
-          if (format === "table" || format === "plain") {
-            console.log(formatWorklog(worklog, format));
-          } else {
-            output(worklog, format);
-          }
-        } catch (err) {
-          outputError(err instanceof Error ? err : String(err), format);
-          throw err;
-        }
+          return true;
+        },
       });
+    }
+
+    if (!timeSpent || !timeSpent.trim()) {
+      throw new Error("Time spent is required");
+    }
+
+    timeSpent = timeSpent.trim();
+
+    if (!validateTimeFormat(timeSpent)) {
+      throw new Error(
+        "Invalid time format. Use formats like: 2h, 30m, 1d, 1w, or combinations like 1d4h30m"
+      );
+    }
+
+    const worklogOptions: { comment?: string; started?: string } = {};
+
+    if (opts["comment"]) {
+      worklogOptions.comment = opts["comment"] as string;
+    }
+
+    if (opts["started"]) {
+      worklogOptions.started = opts["started"] as string;
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`\nAdding worklog to issue: ${issueKey}`));
+      console.log(chalk.dim(`Time spent: ${timeSpent}`));
+      if (worklogOptions.comment) {
+        console.log(chalk.dim(`Comment: ${worklogOptions.comment}`));
+      }
+      if (worklogOptions.started) {
+        console.log(chalk.dim(`Started: ${worklogOptions.started}`));
+      }
+      console.log("");
+    }
+
+    const worklog = await issueEndpoint.addWorklog(issueKey, timeSpent, worklogOptions);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatWorklog(worklog, format));
+    } else {
+      output(worklog, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});
 
 export const worklogCommand = new Command("worklog")
   .description("Manage issue worklogs")

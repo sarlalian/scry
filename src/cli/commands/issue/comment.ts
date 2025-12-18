@@ -32,78 +32,83 @@ const addCommentCommand = new Command("add")
 
 addGlobalOptionsHelp(addCommentCommand);
 
-addCommentCommand.action(async function (this: Command, issueKey: string, bodyArg: string | undefined, opts) {
-        const parent = this.parent?.parent?.parent;
-        const globalOpts = parent?.opts() ?? {};
-        const format = (globalOpts["output"] as OutputFormat) ?? "table";
+addCommentCommand.action(async function (
+  this: Command,
+  issueKey: string,
+  bodyArg: string | undefined,
+  opts
+) {
+  const parent = this.parent?.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-        try {
-          requireValidIssueKey(issueKey);
+  try {
+    requireValidIssueKey(issueKey);
 
-          const configManager = getConfigManager();
-          const config = configManager.load(globalOpts["config"] as string | undefined);
-          const client = new JiraClient(config);
-          const issueEndpoint = new IssueEndpoint(client);
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-          let body = bodyArg;
+    let body = bodyArg;
 
-          // Check for body from flag
-          if (!body && opts["body"]) {
-            body = opts["body"] as string;
-          }
+    // Check for body from flag
+    if (!body && opts["body"]) {
+      body = opts["body"] as string;
+    }
 
-          // Check for editor flag
-          if (!body && opts["editor"]) {
-            body = await editor({
-              message: "Enter comment body:",
-            });
-          }
-
-          // Interactive prompt if no body provided
-          if (!body) {
-            const useEditor = await input({
-              message: "Open editor for comment? (y/N):",
-            });
-
-            if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
-              body = await editor({
-                message: "Enter comment body:",
-              });
-            } else {
-              body = await input({
-                message: "Comment body:",
-                validate: (value) => {
-                  if (!value.trim()) {
-                    return "Comment body is required";
-                  }
-                  return true;
-                },
-              });
-            }
-          }
-
-          if (!body || !body.trim()) {
-            throw new Error("Comment body is required");
-          }
-
-          if (globalOpts["debug"]) {
-            console.log(chalk.dim(`\nAdding comment to issue: ${issueKey}`));
-            console.log(chalk.dim(`Comment body: ${body.substring(0, 50)}...`));
-            console.log("");
-          }
-
-          const comment = await issueEndpoint.addComment(issueKey, body);
-
-          if (format === "table" || format === "plain") {
-            console.log(formatComment(comment, format));
-          } else {
-            output(comment, format);
-          }
-        } catch (err) {
-          outputError(err instanceof Error ? err : String(err), format);
-          throw err;
-        }
+    // Check for editor flag
+    if (!body && opts["editor"]) {
+      body = await editor({
+        message: "Enter comment body:",
       });
+    }
+
+    // Interactive prompt if no body provided
+    if (!body) {
+      const useEditor = await input({
+        message: "Open editor for comment? (y/N):",
+      });
+
+      if (useEditor.toLowerCase() === "y" || useEditor.toLowerCase() === "yes") {
+        body = await editor({
+          message: "Enter comment body:",
+        });
+      } else {
+        body = await input({
+          message: "Comment body:",
+          validate: (value) => {
+            if (!value.trim()) {
+              return "Comment body is required";
+            }
+            return true;
+          },
+        });
+      }
+    }
+
+    if (!body || !body.trim()) {
+      throw new Error("Comment body is required");
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`\nAdding comment to issue: ${issueKey}`));
+      console.log(chalk.dim(`Comment body: ${body.substring(0, 50)}...`));
+      console.log("");
+    }
+
+    const comment = await issueEndpoint.addComment(issueKey, body);
+
+    if (format === "table" || format === "plain") {
+      console.log(formatComment(comment, format));
+    } else {
+      output(comment, format);
+    }
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});
 
 export const commentCommand = new Command("comment")
   .description("Manage issue comments")

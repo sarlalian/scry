@@ -55,91 +55,91 @@ export const listCommand = new Command("list")
 addGlobalOptionsHelp(listCommand);
 
 listCommand.action(async function (this: Command, projectArg: string | undefined, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
 
-    try {
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const versionEndpoint = new VersionEndpoint(client);
+  try {
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const versionEndpoint = new VersionEndpoint(client);
 
-      const projectKey = projectArg ?? globalOpts["project"] ?? config.project.key;
-      if (!projectKey) {
-        throw new Error(
-          "Project key is required. Provide it as an argument, use --project flag, or set it in config."
-        );
+    const projectKey = projectArg ?? globalOpts["project"] ?? config.project.key;
+    if (!projectKey) {
+      throw new Error(
+        "Project key is required. Provide it as an argument, use --project flag, or set it in config."
+      );
+    }
+
+    if (globalOpts["debug"]) {
+      console.log(chalk.dim(`Project: ${projectKey}`));
+      if (opts["status"]) {
+        console.log(chalk.dim(`Status filter: ${opts["status"]}`));
       }
-
-      if (globalOpts["debug"]) {
-        console.log(chalk.dim(`Project: ${projectKey}`));
-        if (opts["status"]) {
-          console.log(chalk.dim(`Status filter: ${opts["status"]}`));
-        }
-        if (opts["orderBy"]) {
-          console.log(chalk.dim(`Order by: ${opts["orderBy"]}`));
-        }
-        console.log(chalk.dim(""));
+      if (opts["orderBy"]) {
+        console.log(chalk.dim(`Order by: ${opts["orderBy"]}`));
       }
+      console.log(chalk.dim(""));
+    }
 
-      const statusFilter = opts["status"] as string | undefined;
-      let validStatus: "released" | "unreleased" | "archived" | undefined;
+    const statusFilter = opts["status"] as string | undefined;
+    let validStatus: "released" | "unreleased" | "archived" | undefined;
 
-      if (statusFilter) {
-        if (
-          statusFilter === "released" ||
-          statusFilter === "unreleased" ||
-          statusFilter === "archived"
-        ) {
-          validStatus = statusFilter;
-        } else {
-          throw new Error(
-            `Invalid status filter: ${statusFilter}. Valid values: released, unreleased, archived`
-          );
-        }
-      }
-
-      const result = await versionEndpoint.list(projectKey, {
-        status: validStatus,
-        orderBy: opts["orderBy"] as string | undefined,
-        maxResults: parseInt(opts["limit"] as string, 10),
-        startAt: parseInt(opts["startAt"] as string, 10),
-      });
-
-      const formatted = formatVersionsForOutput(result);
-
-      if (format === "table") {
-        const columns = opts["columns"]
-          ? RELEASE_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
-          : RELEASE_COLUMNS;
-
-        const tableFormatter = new TableFormatter(columns);
-        const outputStr = tableFormatter.format(
-          {
-            data: formatted,
-            meta: {
-              total: result.length,
-            },
-          },
-          { colors: globalOpts["color"] !== false }
-        );
-        console.log(outputStr);
-
-        if (result.length === 0) {
-          console.log(chalk.dim("\nNo releases found"));
-        } else {
-          console.log(chalk.dim(`\nShowing ${result.length} release(s)`));
-        }
+    if (statusFilter) {
+      if (
+        statusFilter === "released" ||
+        statusFilter === "unreleased" ||
+        statusFilter === "archived"
+      ) {
+        validStatus = statusFilter;
       } else {
-        output(formatted, format, {
+        throw new Error(
+          `Invalid status filter: ${statusFilter}. Valid values: released, unreleased, archived`
+        );
+      }
+    }
+
+    const result = await versionEndpoint.list(projectKey, {
+      status: validStatus,
+      orderBy: opts["orderBy"] as string | undefined,
+      maxResults: parseInt(opts["limit"] as string, 10),
+      startAt: parseInt(opts["startAt"] as string, 10),
+    });
+
+    const formatted = formatVersionsForOutput(result);
+
+    if (format === "table") {
+      const columns = opts["columns"]
+        ? RELEASE_COLUMNS.filter((c) => (opts["columns"] as string).split(",").includes(c.key))
+        : RELEASE_COLUMNS;
+
+      const tableFormatter = new TableFormatter(columns);
+      const outputStr = tableFormatter.format(
+        {
+          data: formatted,
           meta: {
             total: result.length,
           },
-        });
+        },
+        { colors: globalOpts["color"] !== false }
+      );
+      console.log(outputStr);
+
+      if (result.length === 0) {
+        console.log(chalk.dim("\nNo releases found"));
+      } else {
+        console.log(chalk.dim(`\nShowing ${result.length} release(s)`));
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+    } else {
+      output(formatted, format, {
+        meta: {
+          total: result.length,
+        },
+      });
     }
-  });
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});

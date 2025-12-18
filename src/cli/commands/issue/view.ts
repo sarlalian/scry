@@ -157,12 +157,8 @@ function toBriefIssue(issue: Issue, commentCount: number): BriefIssue {
     status: f.status.name,
     type: f.issuetype.name,
     priority: f.priority?.name ?? null,
-    assignee: f.assignee
-      ? { name: f.assignee.displayName, accountId: f.assignee.accountId }
-      : null,
-    reporter: f.reporter
-      ? { name: f.reporter.displayName, accountId: f.reporter.accountId }
-      : null,
+    assignee: f.assignee ? { name: f.assignee.displayName, accountId: f.assignee.accountId } : null,
+    reporter: f.reporter ? { name: f.reporter.displayName, accountId: f.reporter.accountId } : null,
     project: { key: f.project.key, name: f.project.name },
     labels: f.labels ?? [],
     components: f.components?.map((c) => c.name) ?? [],
@@ -193,71 +189,71 @@ export const viewCommand = new Command("view")
 addGlobalOptionsHelp(viewCommand);
 
 viewCommand.action(async function (this: Command, issueKey: string, opts) {
-    const parent = this.parent?.parent;
-    const globalOpts = parent?.opts() ?? {};
-    const format = (globalOpts["output"] as OutputFormat) ?? "table";
-    const isBrief = opts["brief"] as boolean | undefined;
+  const parent = this.parent?.parent;
+  const globalOpts = parent?.opts() ?? {};
+  const format = (globalOpts["output"] as OutputFormat) ?? "table";
+  const isBrief = opts["brief"] as boolean | undefined;
 
-    try {
-      requireValidIssueKey(issueKey);
+  try {
+    requireValidIssueKey(issueKey);
 
-      const configManager = getConfigManager();
-      const config = configManager.load(globalOpts["config"] as string | undefined);
-      const client = new JiraClient(config);
-      const issueEndpoint = new IssueEndpoint(client);
+    const configManager = getConfigManager();
+    const config = configManager.load(globalOpts["config"] as string | undefined);
+    const client = new JiraClient(config);
+    const issueEndpoint = new IssueEndpoint(client);
 
-      const expand: string[] = [];
-      const commentCount = parseInt(opts["comments"] as string, 10);
-      if (commentCount > 0) {
-        expand.push("renderedFields");
-      }
+    const expand: string[] = [];
+    const commentCount = parseInt(opts["comments"] as string, 10);
+    if (commentCount > 0) {
+      expand.push("renderedFields");
+    }
 
-      const issue = await issueEndpoint.get(issueKey, {
-        fields: [
-          "summary",
-          "description",
-          "status",
-          "assignee",
-          "reporter",
-          "priority",
-          "issuetype",
-          "project",
-          "labels",
-          "components",
-          "fixVersions",
-          "created",
-          "updated",
-          "parent",
-          "comment",
-        ],
-        expand,
-      });
+    const issue = await issueEndpoint.get(issueKey, {
+      fields: [
+        "summary",
+        "description",
+        "status",
+        "assignee",
+        "reporter",
+        "priority",
+        "issuetype",
+        "project",
+        "labels",
+        "components",
+        "fixVersions",
+        "created",
+        "updated",
+        "parent",
+        "comment",
+      ],
+      expand,
+    });
 
-      if (format === "table" || format === "plain") {
-        console.log(formatIssueDetails(issue));
+    if (format === "table" || format === "plain") {
+      console.log(formatIssueDetails(issue));
 
-        if (commentCount > 0 && issue.fields.comment) {
-          const comments = issue.fields.comment.comments.slice(-commentCount);
-          if (comments.length > 0) {
-            console.log("\n" + chalk.dim("Recent Comments:"));
-            for (const comment of comments) {
-              console.log(
-                chalk.cyan(`\n${comment.author.displayName}`) +
-                  chalk.dim(` (${new Date(comment.created).toLocaleString()})`)
-              );
-              console.log(adfToPlainText(comment.body));
-            }
+      if (commentCount > 0 && issue.fields.comment) {
+        const comments = issue.fields.comment.comments.slice(-commentCount);
+        if (comments.length > 0) {
+          console.log("\n" + chalk.dim("Recent Comments:"));
+          for (const comment of comments) {
+            console.log(
+              chalk.cyan(`\n${comment.author.displayName}`) +
+                chalk.dim(` (${new Date(comment.created).toLocaleString()})`)
+            );
+            console.log(adfToPlainText(comment.body));
           }
         }
-      } else {
-        if (isBrief) {
-          output(toBriefIssue(issue, commentCount), format);
-        } else {
-          output(issue, format);
-        }
       }
-    } catch (err) {
-      outputError(err instanceof Error ? err : String(err), format);
-      throw err;
+    } else {
+      if (isBrief) {
+        output(toBriefIssue(issue, commentCount), format);
+      } else {
+        output(issue, format);
+      }
     }
-  });
+  } catch (err) {
+    outputError(err instanceof Error ? err : String(err), format);
+    throw err;
+  }
+});
