@@ -1,6 +1,6 @@
 {
   "name": "scry",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Feature-rich interactive Jira command line",
   "type": "module",
   "main": "src/index.ts",

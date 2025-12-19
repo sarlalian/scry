@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.3.0] - 2025-12-19
+
+### Changed
+
+- Allow -q flag to combine with other filter options (-s, -a, etc.) using AND logic for more flexible issue queries
+
+
 ## [0.2.1] - 2025-12-18
 
 ### Added
