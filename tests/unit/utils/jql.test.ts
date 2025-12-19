@@ -81,6 +81,20 @@ describe("JqlBuilder", () => {
     expect(jql).toBe('project = "PROJ" AND resolution IS EMPTY');
   });
 
+  test("handles raw JQL as first condition with additional filters", () => {
+    const jql = new JqlBuilder()
+      .raw('project = "MYPROJ"')
+      .status("In Progress")
+      .assignee("john.doe")
+      .build();
+    expect(jql).toBe('project = "MYPROJ" AND status = "In Progress" AND assignee = "john.doe"');
+  });
+
+  test("handles raw JQL only", () => {
+    const jql = new JqlBuilder().raw('project = "PROJ" ORDER BY created DESC').build();
+    expect(jql).toBe('project = "PROJ" ORDER BY created DESC');
+  });
+
   test("handles ASC ordering", () => {
     const jql = new JqlBuilder().project("PROJ").orderBy("updated", "ASC").build();
     expect(jql).toBe('project = "PROJ" ORDER BY updated ASC');

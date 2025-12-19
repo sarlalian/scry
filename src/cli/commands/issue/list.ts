@@ -80,63 +80,69 @@ listCommand.action(async function (this: Command, opts) {
     const client = new JiraClient(config);
     const issueEndpoint = new IssueEndpoint(client);
 
-    let jql: string;
+    const builder = new JqlBuilder();
 
+    // Add raw JQL as first condition if provided
     if (opts["jql"]) {
-      jql = opts["jql"] as string;
-    } else {
-      const builder = new JqlBuilder();
-      const project = projectKey ?? config.project.key;
+      builder.raw(opts["jql"] as string);
+    }
 
+    // Only add default project when NOT using raw JQL
+    if (!opts["jql"]) {
+      const project = projectKey ?? config.project.key;
       if (project) {
         builder.project(project);
       }
+    }
 
-      if (opts["assignee"]) {
-        builder.assignee(opts["assignee"] as string);
-      }
+    // Process all filter options (these now work with or without -q)
+    if (opts["assignee"]) {
+      builder.assignee(opts["assignee"] as string);
+    }
 
-      if (opts["reporter"]) {
-        builder.reporter(opts["reporter"] as string);
-      }
+    if (opts["reporter"]) {
+      builder.reporter(opts["reporter"] as string);
+    }
 
-      if (opts["status"]) {
-        builder.status(opts["status"] as string);
-      }
+    if (opts["status"]) {
+      builder.status(opts["status"] as string);
+    }
 
-      if (opts["type"]) {
-        builder.type(opts["type"] as string);
-      }
+    if (opts["type"]) {
+      builder.type(opts["type"] as string);
+    }
 
-      if (opts["priority"]) {
-        builder.priority(opts["priority"] as string);
-      }
+    if (opts["priority"]) {
+      builder.priority(opts["priority"] as string);
+    }
 
-      if (opts["label"] && (opts["label"] as string[]).length > 0) {
-        builder.labels(opts["label"] as string[]);
-      }
+    if (opts["label"] && (opts["label"] as string[]).length > 0) {
+      builder.labels(opts["label"] as string[]);
+    }
 
-      if (opts["component"]) {
-        builder.component(opts["component"] as string);
-      }
+    if (opts["component"]) {
+      builder.component(opts["component"] as string);
+    }
 
-      if (opts["watching"]) {
-        builder.watcher("currentUser()");
-      }
+    if (opts["watching"]) {
+      builder.watcher("currentUser()");
+    }
 
-      if (opts["created"]) {
-        builder.created(opts["created"] as string);
-      }
+    if (opts["created"]) {
+      builder.created(opts["created"] as string);
+    }
 
-      if (opts["updated"]) {
-        builder.updated(opts["updated"] as string);
-      }
+    if (opts["updated"]) {
+      builder.updated(opts["updated"] as string);
+    }
 
+    // Only add ordering when NOT using raw JQL (raw JQL may include its own ORDER BY)
+    if (!opts["jql"]) {
       const orderDirection = opts["reverse"] ? "ASC" : "DESC";
       builder.orderBy(opts["orderBy"] as string, orderDirection);
-
-      jql = builder.build();
     }
+
+    const jql = builder.build();
 
     if (globalOpts["debug"]) {
       console.log(chalk.dim(`JQL: ${jql}\n`));

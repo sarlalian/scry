@@ -123,6 +123,55 @@ describeWithCredentials("issue list CLI", () => {
         expect(issue.status).not.toBe("Done");
       }
     });
+
+    test("combines raw JQL with status filter", async () => {
+      const jql = `project = ${creds.project}`;
+      const result = await runScry([
+        "issue",
+        "list",
+        "-q",
+        jql,
+        "-s",
+        "To Do",
+        "--limit",
+        "10",
+        "-o",
+        "json",
+      ]);
+
+      expect(result.exitCode).toBe(0);
+
+      const parsed = parseJsonOutput<IssueListItem[]>(result.stdout);
+      for (const issue of parsed.data) {
+        expect(issue.status).toBe("To Do");
+      }
+    });
+
+    test("combines raw JQL with multiple filters", async () => {
+      const jql = `project = ${creds.project}`;
+      const result = await runScry([
+        "issue",
+        "list",
+        "-q",
+        jql,
+        "-s",
+        "~Done",
+        "-t",
+        "Task",
+        "--limit",
+        "10",
+        "-o",
+        "json",
+      ]);
+
+      expect(result.exitCode).toBe(0);
+
+      const parsed = parseJsonOutput<IssueListItem[]>(result.stdout);
+      for (const issue of parsed.data) {
+        expect(issue.status).not.toBe("Done");
+        expect(issue.type).toBe("Task");
+      }
+    });
   });
 
   describe("pagination", () => {
