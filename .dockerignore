@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed fresh in container)
+node_modules/
+
+# Build outputs
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Testing
+coverage/
+.nyc_output/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Beads issue tracking
+.beads/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
