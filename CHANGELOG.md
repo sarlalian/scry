@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add Claude Code CLI integration for changelog generation
+
+### Changed
+
+- Replace direct Anthropic API calls with Claude Code CLI oneshot mode, eliminating need for separate ANTHROPIC_API_KEY
+
+
+## [0.2.0] - 2025-12-18
+
+### Added
+
 ### Changed
 
 ### Fixed
