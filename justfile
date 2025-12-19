@@ -91,11 +91,25 @@ help CMD="":
 watch:
     bun test --watch
 
-# Create a new release (builds all platforms)
-release VERSION:
-    @echo "Building release {{VERSION}}..."
-    VERSION={{VERSION}} bun run build
-    @echo "Release {{VERSION}} built successfully!"
+# Bump patch version and create release (0.1.0 -> 0.1.1)
+release-patch *ARGS:
+    bun scripts/version-bump.ts patch {{ARGS}}
+
+# Bump minor version and create release (0.1.0 -> 0.2.0)
+release-minor *ARGS:
+    bun scripts/version-bump.ts minor {{ARGS}}
+
+# Bump major version and create release (0.1.0 -> 1.0.0)
+release-major *ARGS:
+    bun scripts/version-bump.ts major {{ARGS}}
+
+# Push release commits and tags to origin
+release-push:
+    git push && git push --tags
+
+# Show current version
+version:
+    @jq -r '.version' package.json
 
 # Run with a specific config file
 with-config CONFIG *ARGS:
