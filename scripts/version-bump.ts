@@ -7,9 +7,8 @@
  *   bun scripts/version-bump.ts minor   # 0.1.0 -> 0.2.0
  *   bun scripts/version-bump.ts major   # 0.1.0 -> 1.0.0
  *
- * Environment:
- *   ANTHROPIC_API_KEY - Required for AI changelog generation
- *   SCRY_CHANGELOG_MODEL - Optional, override Claude model (default: claude-sonnet-4-20250514)
+ * Requirements:
+ *   Claude Code CLI must be installed for AI changelog generation
  */
 
 import { $ } from "bun";
@@ -204,8 +203,8 @@ async function main(): Promise<void> {
         console.log("No significant changes found in commits.");
       }
     } catch (error) {
-      if (error instanceof ClaudeClientError && error.code === "NO_API_KEY") {
-        console.log("Note: Set ANTHROPIC_API_KEY for AI-generated changelogs.");
+      if (error instanceof ClaudeClientError && error.code === "CLI_NOT_FOUND") {
+        console.log("Note: Install Claude Code CLI for AI-generated changelogs.");
         console.log("Continuing with empty changelog template.\n");
       } else {
         console.error("AI changelog generation failed:", (error as Error).message);
