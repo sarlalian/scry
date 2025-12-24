@@ -1,6 +1,6 @@
 {
   "name": "@sarlalian/scry",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Feature-rich interactive Jira command line",
   "type": "module",
   "main": "src/index.ts",
