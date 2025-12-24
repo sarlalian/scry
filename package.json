@@ -1,5 +1,5 @@
 {
-  "name": "scry",
+  "name": "@sarlalian/scry",
   "version": "0.3.0",
   "description": "Feature-rich interactive Jira command line",
   "type": "module",
@@ -27,6 +27,10 @@
     "format:check": "prettier --check src tests",
     "check": "bun run typecheck && bun run lint && bun run format:check",
     "clean": "rm -rf dist",
+    "docs:dev": "cd site && npm run dev",
+    "docs:build": "cd site && npm run build",
+    "docs:install": "cd site && npm install",
+    "vhs:generate": "cd vhs && for tape in *.tape; do [[ \"$tape\" != \"common.tape\" ]] && vhs \"$tape\"; done",
     "version:patch": "bun scripts/version-bump.ts patch",
     "version:minor": "bun scripts/version-bump.ts minor",
     "version:major": "bun scripts/version-bump.ts major",
@@ -77,5 +81,8 @@
     "bun"
   ],
   "author": "sarlalian",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -1,0 +1,26 @@
+# Development
+.github/
+.beads/
+.claude/
+docs/
+site/
+vhs/
+tests/
+scripts/
+
+# Build artifacts
+dist/
+
+# Config files
+.eslintrc*
+.prettierrc*
+eslint.config.js
+tsconfig.json
+.editorconfig
+.gitignore
+.husky/
+
+# Misc
+*.md
+!README.md
+*.tape

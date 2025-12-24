@@ -1,0 +1,113 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/**'
+      - 'vhs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # Optional: Generate VHS GIFs (requires Jira connection)
+  # Uncomment when ready to generate demos
+  # generate-gifs:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Install VHS dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y ffmpeg
+  #
+  #     - name: Install VHS
+  #       run: go install github.com/charmbracelet/vhs@latest
+  #
+  #     - name: Setup Bun
+  #       uses: oven-sh/setup-bun@v2
+  #
+  #     - name: Install and build scry
+  #       run: |
+  #         bun install
+  #         bun run build:local
+  #
+  #     - name: Generate GIFs
+  #       env:
+  #         SCRY_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  #         SCRY_SERVER: ${{ secrets.JIRA_SERVER }}
+  #         SCRY_LOGIN: ${{ secrets.JIRA_LOGIN }}
+  #       run: |
+  #         cd vhs
+  #         for tape in *.tape; do
+  #           [[ "$tape" != "common.tape" ]] && vhs "$tape" || true
+  #         done
+  #       continue-on-error: true
+  #
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: demo-gifs
+  #         path: docs/images/demos/*.gif
+  #         if-no-files-found: ignore
+
+  # Build Hugo documentation site
+  build:
+    runs-on: ubuntu-latest
+    # needs: generate-gifs  # Uncomment when using GIF generation
+    steps:
+      - uses: actions/checkout@v4
+
+      # Uncomment when using GIF generation
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: demo-gifs
+      #     path: site/assets/images/demos
+      #   continue-on-error: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build documentation site
+        working-directory: site
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/public
+
+  # Deploy to GitHub Pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
